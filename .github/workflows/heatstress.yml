@@ -1,4 +1,41 @@
 name: Heat Stress Monitor
 
 on:
+  schedule:
+    # GitHub Actions cron is UTC.
+    # KST 08:00 = UTC 23:00 previous day
+    - cron: "0 23 * * *"
+    # KST 09:00~17:00 = UTC 00:00~08:00
+    - cron: "0 0-8 * * *"
   workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run heat stress monitor
+        env:
+          KMA_AUTH_KEY: ${{ secrets.KMA_AUTH_KEY }}
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+        run: |
+          python scripts/monitor.py
+
+      - name: Commit updated dashboard data
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add data docs
+          git diff --cached --quiet || git commit -m "Update heat stress monitoring data"
+          git push
