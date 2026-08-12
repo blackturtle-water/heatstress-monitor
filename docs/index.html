@@ -1,22 +1,29 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>유니드 울산공장 온열질환 모니터링</title>
-  ./style.css
+
+  <linkle.css
 </head>
+
 <body>
   <main class="wrap">
+
     <section class="hero">
       <div>
         <h1>유니드 울산공장 온열질환 모니터링</h1>
         <p>체감온도 기준 위험단계를 자동 확인하고 Teams 알림과 대시보드를 갱신합니다.</p>
       </div>
-      <div id="levelBadge" class="badge">확인 중</div>
+
+      <div id="levelBadge" class="badge">
+        확인 중
+      </div>
     </section>
 
     <section class="grid">
+
       <article class="card main">
         <h2>현재 체감온도</h2>
         <div id="apparentTemperature" class="temp">-</div>
@@ -37,24 +44,28 @@
 
       <article class="card">
         <h2>기상 관측값</h2>
-        <p>기온: <span id="temperature">추후 연동</span></p>
-        <p>습도: <span id="humidity">추후 연동</span></p>
-        <p>풍속: <span id="windSpeed">추후 연동</span></p>
+        <p>기온: <span id="temperature">-</span></p>
+        <p>습도: <span id="humidity">-</span></p>
+        <p>풍속: <span id="windSpeed">-</span></p>
+        <p>관측소: <span id="awsStationName">-</span></p>
       </article>
+
     </section>
 
     <section class="card">
       <h2>단계 기준</h2>
+
       <ul class="criteria">
-        <li><span class="dot normal"></span> 정상: 31℃ 미만</li>
-        <li><span class="dot caution"></span> 주의: 31℃ 이상</li>
-        <li><span class="dot warning"></span> 경계: 33℃ 이상</li>
-        <li><span class="dot danger"></span> 위험: 35℃ 이상</li>
-        <li><span class="dot extreme"></span> 매우위험: 38℃ 이상</li>
+        <li>정상 : 31℃ 미만</li>
+        <li>주의 : 31℃ 이상</li>
+        <li>경계 : 33℃ 이상</li>
+        <li>위험 : 35℃ 이상</li>
+        <li>매우위험 : 38℃ 이상</li>
       </ul>
     </section>
+
   </main>
 
-  ./dashboard.jsscript>
+  ./dashboard.js
 </body>
 </html>
