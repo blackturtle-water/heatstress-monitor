@@ -268,60 +268,68 @@ def get_aws_weather(config):
     station = str(config["awsStation"])
     current_time = now_kst()
 
-    attempts = []
+    # AWS 자료는 최신 시각에 결측이 있을 수 있으므로
+    # 최근 3시간 범위를 한 번에 조회해서 최신 유효 관측값을 찾는다.
+    tm2_time = current_time - timedelta(minutes=10)
+    tm1_time = current_time - timedelta(hours=3)
 
-    # 너무 오래 돌지 않도록 최근 10분, 20분, 30분만 확인
-    for minutes_back in [10, 20, 30]:
-        target_time = current_time - timedelta(minutes=minutes_back)
-        tm2 = format_aws_time(target_time)
+    tm1 = format_aws_time(tm1_time)
+    tm2 = format_aws_time(tm2_time)
 
-        params = {
-            "tm2": tm2,
-            "stn": station,
-            "disp": "0",
-            "help": "1",
-            "authKey": KMA_AUTH_KEY
+    params = {
+        "tm1": tm1,
+        "tm2": tm2,
+        "stn": station,
+        "disp": "0",
+        "help": "1",
+        "authKey": KMA_AUTH_KEY
+    }
+
+    text, full_url, error = http_get_text(AWS_URL, params)
+
+    print(f"[DEBUG] AWS request tm1={tm1}, tm2={tm2}, stn={station}")
+    print(f"[DEBUG] AWS URL without key: {AWS_URL}?tm1={tm1}&tm2={tm2}&stn={station}&disp=0&help=1&authKey=***")
+
+    if error:
+        print(f"[WARN] AWS HTTP error: {error}")
+
+        return {
+            "temperature": None,
+            "humidity": None,
+            "windSpeed": None,
+            "observedTime": None,
+            "apiStatus": "HTTP_ERROR",
+            "apiMessage": error,
+            "url": full_url,
+            "attempts": [
+                {
+                    "tm1": tm1,
+                    "tm2": tm2,
+                    "status": "HTTP_ERROR",
+                    "message": error
+                }
+            ]
         }
 
-        text, full_url, error = http_get_text(AWS_URL, params)
+    print("[DEBUG] AWS response sample start")
+    print(text[:3000])
+    print("[DEBUG] AWS response sample end")
 
-        print(f"[DEBUG] AWS request tm2={tm2}, stn={station}")
-        print(f"[DEBUG] AWS URL without key: {AWS_URL}?tm2={tm2}&stn={station}&disp=0&help=1&authKey=***")
+    parsed, parse_error = parse_aws_text(text, station)
 
-        if error:
-            attempts.append({
-                "tm2": tm2,
-                "status": "HTTP_ERROR",
-                "message": error
-            })
-            print(f"[WARN] AWS HTTP error: {error}")
-            continue
+    if parsed:
+        return {
+            "temperature": parsed["temperature"],
+            "humidity": parsed["humidity"],
+            "windSpeed": parsed["windSpeed"],
+            "observedTime": parsed["observedTime"],
+            "apiStatus": "OK",
+            "apiMessage": "",
+            "url": full_url,
+            "rawRow": parsed["rawRow"]
+        }
 
-        print("[DEBUG] AWS response sample start")
-        print(text[:2000])
-        print("[DEBUG] AWS response sample end")
-
-        parsed, parse_error = parse_aws_text(text, station)
-
-        if parsed:
-            return {
-                "temperature": parsed["temperature"],
-                "humidity": parsed["humidity"],
-                "windSpeed": parsed["windSpeed"],
-                "observedTime": parsed["observedTime"],
-                "apiStatus": "OK",
-                "apiMessage": "",
-                "url": full_url,
-                "rawRow": parsed["rawRow"]
-            }
-
-        attempts.append({
-            "tm2": tm2,
-            "status": "PARSE_OR_NO_DATA",
-            "message": parse_error
-        })
-
-        print(f"[WARN] AWS parse failed: {parse_error}")
+    print(f"[WARN] AWS parse failed: {parse_error}")
 
     return {
         "temperature": None,
@@ -329,9 +337,16 @@ def get_aws_weather(config):
         "windSpeed": None,
         "observedTime": None,
         "apiStatus": "NO_DATA",
-        "apiMessage": "최근 AWS 관측자료를 가져오지 못했습니다.",
-        "url": None,
-        "attempts": attempts
+        "apiMessage": "최근 3시간 AWS 관측자료 중 유효한 기온/습도 값을 찾지 못했습니다.",
+        "url": full_url,
+        "attempts": [
+            {
+                "tm1": tm1,
+                "tm2": tm2,
+                "status": "PARSE_OR_NO_VALID_DATA",
+                "message": parse_error
+            }
+        ]
     }
 
 
