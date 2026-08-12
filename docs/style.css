@@ -37,7 +37,7 @@ body {
 
 .hero h1 {
   margin: 0 0 8px;
-  font-size: 28px;
+  font-size: 30px;
 }
 
 .hero p {
@@ -58,6 +58,7 @@ body {
   border-radius: 18px;
   padding: 20px;
   box-shadow: 0 8px 20px rgba(16, 24, 40, 0.04);
+  margin-bottom: 16px;
 }
 
 .card h2 {
@@ -66,17 +67,17 @@ body {
   color: #344054;
 }
 
-.card.main {
-  grid-column: span 1;
+.card p {
+  margin: 8px 0;
 }
 
 .temp {
-  font-size: 42px;
+  font-size: 44px;
   font-weight: 800;
 }
 
 .level {
-  font-size: 34px;
+  font-size: 36px;
   font-weight: 800;
 }
 
