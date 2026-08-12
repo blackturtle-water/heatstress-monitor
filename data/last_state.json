@@ -1,8 +1,8 @@
 {
-  "level": "정상",
-  "apparentTemperature": 28.3,
-  "observedAt": "2026-08-12 13:27:59",
-  "temperature": 26.9,
-  "humidity": 65.2,
+  "level": "위험",
+  "apparentTemperature": 35.0,
+  "observedAt": "2026-08-12 00:00:00",
+  "temperature": 34.0,
+  "humidity": 70.0,
   "windSpeed": null
 }
