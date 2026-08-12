@@ -29,13 +29,40 @@ jobs:
         env:
           KMA_AUTH_KEY: ${{ secrets.KMA_AUTH_KEY }}
           TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          DASHBOARD_URL: "https://blackturtle-water.github.io/heatstress-monitor/"
         run: |
-          python scripts/monitor.py
+          set -e
+          echo "=== Start heat stress monitor ==="
+          python -u scripts/monitor.py
+          echo "=== Finished heat stress monitor ==="
+
+      - name: Show current status file
+        run: |
+          echo "=== data/current.json ==="
+          if [ -f data/current.json ]; then
+            cat data/current.json
+          else
+            echo "data/current.json not found"
+          fi
+
+          echo ""
+          echo "=== data/last_state.json ==="
+          if [ -f data/last_state.json ]; then
+            cat data/last_state.json
+          else
+            echo "data/last_state.json not found"
+          fi
 
       - name: Commit updated dashboard data
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+
           git add data docs
-          git diff --cached --quiet || git commit -m "Update heat stress monitoring data"
-          git push
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update heat stress monitoring data"
+            git push
+          fi
