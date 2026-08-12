@@ -1,5 +1,5 @@
 {
-  "level": "정상",
-  "apparentTemperature": null,
-  "observedAt": null
+  "level": "위험",
+  "apparentTemperature": 35.0,
+  "observedAt": "2026-08-12 00:00:00"
 }
