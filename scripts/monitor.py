@@ -3,7 +3,6 @@ import json
 import math
 import os
 import sys
-import time
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -23,6 +22,11 @@ DASHBOARD_DATA_PATH = DOCS_DIR / "current.json"
 
 KMA_AUTH_KEY = os.environ.get("KMA_AUTH_KEY")
 TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK_URL")
+
+DASHBOARD_URL = os.environ.get(
+    "DASHBOARD_URL",
+    "https://blackturtle-water.github.io/heatstress-monitor/"
+)
 
 AWS_URL = "https://apihub.kma.go.kr/api/typ01/cgi-bin/url/nph-aws2_min"
 
@@ -142,7 +146,6 @@ def to_float(value):
     except ValueError:
         return None
 
-    # AWS 설명에서 -50 이하면 관측 없음 또는 오류값으로 표시된다고 되어 있음.
     if number <= -50:
         return None
 
@@ -181,8 +184,6 @@ def parse_aws_text(text, station_id):
             candidate = line.lstrip("#").strip()
             tokens = candidate.split()
 
-            # 실제 컬럼 헤더 예:
-            # YYMMDDHHMI STN WD1 WS1 WDS WSS WD10 WS10 TA RE ... HM PA PS TD
             if "YYMMDDHHMI" in tokens and "STN" in tokens and "TA" in tokens and "HM" in tokens:
                 header_tokens = tokens
 
@@ -215,29 +216,8 @@ def parse_aws_text(text, station_id):
 
             temperature = get_by_key("TA")
             humidity = get_by_key("HM")
-            # 10분 평균 풍속 우선, 없으면 1분 평균 풍속
             wind_speed = get_by_key("WS10", "WS1")
 
-        # fallback: 실제 AWS 매분자료 컬럼 기준
-        #
-        # 0 YYMMDDHHMI
-        # 1 STN
-        # 2 WD1
-        # 3 WS1
-        # 4 WDS
-        # 5 WSS
-        # 6 WD10
-        # 7 WS10
-        # 8 TA
-        # 9 RE
-        # 10 RN-15m
-        # 11 RN-60m
-        # 12 RN-12H
-        # 13 RN-DAY
-        # 14 HM
-        # 15 PA
-        # 16 PS
-        # 17 TD
         if len(row) > 14:
             if wind_speed is None:
                 wind_speed = to_float(row[7]) or to_float(row[3])
@@ -259,7 +239,6 @@ def parse_aws_text(text, station_id):
             "rawRow": row
         }
 
-    # 최신 데이터부터 과거 방향으로 유효값 검색
     for row in reversed(data_rows):
         parsed = parse_row(row)
         if parsed:
@@ -311,7 +290,9 @@ def get_aws_weather(config):
             "apiStatus": "SECRET_MISSING",
             "apiMessage": "KMA_AUTH_KEY secret is missing.",
             "url": None,
-            "attempts": []
+            "attempts": [],
+            "stationId": None,
+            "stationName": None
         }
 
     current_time = now_kst()
@@ -319,8 +300,6 @@ def get_aws_weather(config):
 
     attempts = []
 
-    # 너무 오래 돌지 않게 4개 시각만 확인.
-    # 각 관측소별 최근 10, 20, 30, 60분 순서로 확인.
     minutes_back_list = [10, 20, 30, 60]
 
     for station in stations:
@@ -355,9 +334,8 @@ def get_aws_weather(config):
                 print(f"[WARN] AWS HTTP error: {error}")
                 continue
 
-            # 첫 1회 정도 원문 확인용. 로그가 너무 길어지지 않게 900자만 출력.
             print("[DEBUG] AWS response sample start")
-            print(text[:900])
+            print(text[:700])
             print("[DEBUG] AWS response sample end")
 
             parsed, parse_error = parse_aws_text(text, station_id)
@@ -414,8 +392,6 @@ def calculate_heat_index_celsius(temp_c, rh):
 
     temp_f = c_to_f(temp_c)
 
-    # NOAA/NWS 단순 Heat Index 공식.
-    # 80°F 미만에서는 단순식 사용, 80°F 이상에서는 Rothfusz regression 사용.
     if temp_f < 80:
         simple_hi_f = 0.5 * (
             temp_f
@@ -480,7 +456,8 @@ def load_last_state():
     default_state = {
         "level": "정상",
         "apparentTemperature": None,
-        "observedAt": None
+        "observedAt": None,
+        "regularReports": {}
     }
 
     state = safe_load_json(LAST_STATE_PATH, default_state)
@@ -490,6 +467,9 @@ def load_last_state():
 
     if "level" not in state:
         state["level"] = "정상"
+
+    if "regularReports" not in state or not isinstance(state["regularReports"], dict):
+        state["regularReports"] = {}
 
     return state
 
@@ -513,6 +493,7 @@ def append_history(row):
         "level",
         "previousLevel",
         "levelChanged",
+        "notificationReason",
         "teamsNotified",
         "apiStatus",
         "apiMessage",
@@ -530,7 +511,109 @@ def append_history(row):
         writer.writerow(row)
 
 
-def build_message(config, current, previous_level):
+def is_regular_report_time(dt):
+    return dt.hour in [8, 13]
+
+
+def regular_report_key(dt):
+    return dt.strftime("%Y-%m-%d") + f"_{dt.hour:02d}"
+
+
+def should_send_regular_report(last_state, dt, current_level):
+    if current_level == "데이터없음":
+        return False
+
+    if not is_regular_report_time(dt):
+        return False
+
+    key = regular_report_key(dt)
+    sent = last_state.get("regularReports", {}).get(key)
+
+    return not bool(sent)
+
+
+def should_send_level_change(previous_level, current_level):
+    if current_level == "데이터없음":
+        return False
+
+    if previous_level == current_level:
+        return False
+
+    return True
+
+
+def build_title_and_actions(level, report_type):
+    if report_type == "regular_08":
+        return "📋 [온열질환 정기보고] 08:00 현황", [
+            "금일 온열질환 모니터링을 시작합니다.",
+            "현재 체감온도와 작업환경을 확인해 주세요."
+        ]
+
+    if report_type == "regular_13":
+        return "📋 [온열질환 정기보고] 13:00 현황", [
+            "오후 작업 전 체감온도와 작업환경을 확인해 주세요.",
+            "폭염 단계가 상승하면 추가 알림이 발송됩니다."
+        ]
+
+    if level == "정상":
+        return "✅ [온열질환 정상복귀] 체감온도 31℃ 미만", [
+            "현재 체감온도는 31℃ 미만입니다.",
+            "다만 작업 전 수분공급과 휴식 관리는 계속 유지해 주세요."
+        ]
+
+    if level == "주의":
+        return "🟡 [온열질환 주의] 체감온도 31℃ 이상", [
+            "시원하고 깨끗한 물을 충분히 제공해 주세요.",
+            "폭염작업 시 적절한 휴식을 부여해 주세요.",
+            "작업자 건강상태를 주기적으로 확인해 주세요.",
+            "냉방·통풍장치 및 그늘막을 활용해 주세요."
+        ]
+
+    if level == "경계":
+        return "🟠 [온열질환 경계] 체감온도 33℃ 이상", [
+            "폭염작업 시 매 2시간 이내 20분 이상 휴식을 부여해 주세요.",
+            "작업시간대 조정 또는 옥외작업 단축을 검토해 주세요.",
+            "폭염 집중 시간대 노출을 최소화해 주세요.",
+            "온열질환 민감군 작업자를 추가 확인해 주세요."
+        ]
+
+    if level == "위험":
+        return "🔴 [온열질환 위험] 체감온도 35℃ 이상", [
+            "무더위 시간대 옥외작업 중지를 검토해 주세요.",
+            "작업시간 조정 또는 옥외작업 단축을 시행해 주세요.",
+            "작업자 건강상태를 수시로 확인해 주세요.",
+            "냉각의류, 냉각조끼 등 보냉장구 지급을 검토해 주세요."
+        ]
+
+    if level == "매우위험":
+        return "🚨 [온열질환 매우위험] 체감온도 38℃ 이상", [
+            "긴급조치 작업 외 옥외작업 중지를 검토해 주세요.",
+            "작업자 상태를 수시로 확인해 주세요.",
+            "온열질환 의심자는 즉시 시원한 장소로 이동시켜 주세요.",
+            "의식이 없는 경우 즉시 119에 신고해 주세요.",
+            "의식이 있는 경우 응급조치 후 증상 개선이 없으면 119에 신고해 주세요."
+        ]
+
+    return "⚪ [온열질환 데이터 없음] AWS 관측자료 조회 실패", [
+        "AWS 관측자료 또는 체감온도 계산값을 현재 확인하지 못했습니다.",
+        "GitHub Actions 로그와 대시보드 상태를 확인해 주세요."
+    ]
+
+
+def build_direction(previous_level, current_level, report_type):
+    if report_type in ["regular_08", "regular_13"]:
+        return "정기보고"
+
+    if level_rank(current_level) > level_rank(previous_level):
+        return "단계상승"
+
+    if level_rank(current_level) < level_rank(previous_level):
+        return "단계하향"
+
+    return "단계변경"
+
+
+def build_message(config, current, previous_level, report_type):
     level = current["level"]
     temp = current["apparentTemperature"]
     air_temp = current["temperature"]
@@ -538,64 +621,14 @@ def build_message(config, current, previous_level):
     wind_speed = current["windSpeed"]
     observed_at = current["observedAt"]
 
-    if level == "정상":
-        title = "✅ [온열질환 정상복귀] 체감온도 31℃ 미만"
-        actions = [
-            "현재 체감온도는 31℃ 미만입니다.",
-            "다만 작업 전 수분공급과 휴식 관리는 계속 유지해 주세요."
-        ]
-    elif level == "주의":
-        title = "🟡 [온열질환 주의] 체감온도 31℃ 이상"
-        actions = [
-            "시원하고 깨끗한 물을 충분히 제공해 주세요.",
-            "폭염작업 시 적절한 휴식을 부여해 주세요.",
-            "작업자 건강상태를 주기적으로 확인해 주세요.",
-            "냉방·통풍장치 및 그늘막을 활용해 주세요."
-        ]
-    elif level == "경계":
-        title = "🟠 [온열질환 경계] 체감온도 33℃ 이상"
-        actions = [
-            "폭염작업 시 매 2시간 이내 20분 이상 휴식을 부여해 주세요.",
-            "작업시간대 조정 또는 옥외작업 단축을 검토해 주세요.",
-            "폭염 집중 시간대 노출을 최소화해 주세요.",
-            "온열질환 민감군 작업자를 추가 확인해 주세요."
-        ]
-    elif level == "위험":
-        title = "🔴 [온열질환 위험] 체감온도 35℃ 이상"
-        actions = [
-            "무더위 시간대 옥외작업 중지를 검토해 주세요.",
-            "작업시간 조정 또는 옥외작업 단축을 시행해 주세요.",
-            "작업자 건강상태를 수시로 확인해 주세요.",
-            "냉각의류, 냉각조끼 등 보냉장구 지급을 검토해 주세요."
-        ]
-    elif level == "매우위험":
-        title = "🚨 [온열질환 매우위험] 체감온도 38℃ 이상"
-        actions = [
-            "긴급조치 작업 외 옥외작업 중지를 검토해 주세요.",
-            "작업자 상태를 수시로 확인해 주세요.",
-            "온열질환 의심자는 즉시 시원한 장소로 이동시켜 주세요.",
-            "의식이 없는 경우 즉시 119에 신고해 주세요.",
-            "의식이 있는 경우 응급조치 후 증상 개선이 없으면 119에 신고해 주세요."
-        ]
-    else:
-        title = "⚪ [온열질환 데이터 없음] AWS 관측자료 조회 실패"
-        actions = [
-            "AWS 관측자료 또는 체감온도 계산값을 현재 확인하지 못했습니다.",
-            "GitHub Actions 로그와 data/current.json 상태를 확인해 주세요."
-        ]
-
-    direction = "단계변경"
-
-    if level_rank(level) > level_rank(previous_level):
-        direction = "단계상승"
-    elif level_rank(level) < level_rank(previous_level):
-        direction = "단계하향"
+    title, actions = build_title_and_actions(level, report_type)
+    direction = build_direction(previous_level, level, report_type)
 
     bullet_actions = "\n".join([f"- {item}" for item in actions])
 
     temp_text = "-" if temp is None else f"{temp:.1f}℃"
     air_temp_text = "-" if air_temp is None else f"{air_temp:.1f}℃"
-    humidity_text = "-" if humidity is None else f"{humidity:.0f}%"
+    humidity_text = "-" if humidity is None else f"{humidity:.1f}%"
     wind_text = "-" if wind_speed is None else f"{wind_speed:.1f} m/s"
 
     station_text = current.get("awsStationName") or current.get("awsStation") or "-"
@@ -617,6 +650,9 @@ def build_message(config, current, previous_level):
 
 ✅ 권고조치
 {bullet_actions}
+
+🔗 대시보드
+{DASHBOARD_URL}
 """.strip()
 
     return title, text
@@ -648,6 +684,13 @@ def send_teams_message(title, text):
                             "type": "TextBlock",
                             "text": text,
                             "wrap": True
+                        }
+                    ],
+                    "actions": [
+                        {
+                            "type": "Action.OpenUrl",
+                            "title": "대시보드 바로가기",
+                            "url": DASHBOARD_URL
                         }
                     ]
                 }
@@ -681,14 +724,20 @@ def send_teams_message(title, text):
         return False
 
 
-def should_notify(previous_level, current_level):
-    if current_level == "데이터없음":
-        return False
+def determine_notification(last_state, current_level, dt):
+    previous_level = last_state.get("level", "정상")
 
-    if previous_level == current_level:
-        return False
+    if should_send_level_change(previous_level, current_level):
+        return True, "level_change"
 
-    return True
+    if should_send_regular_report(last_state, dt, current_level):
+        if dt.hour == 8:
+            return True, "regular_08"
+
+        if dt.hour == 13:
+            return True, "regular_13"
+
+    return False, "none"
 
 
 def main():
@@ -696,7 +745,8 @@ def main():
     config = load_config()
     last_state = load_last_state()
 
-    observed_at = now_kst().strftime("%Y-%m-%d %H:%M:%S")
+    dt = now_kst()
+    observed_at = dt.strftime("%Y-%m-%d %H:%M:%S")
 
     weather = get_aws_weather(config)
 
@@ -709,7 +759,7 @@ def main():
     current_level = decide_level(apparent_temp)
     previous_level = last_state.get("level", "정상")
 
-    notify = should_notify(previous_level, current_level)
+    notify, notification_reason = determine_notification(last_state, current_level, dt)
 
     current = {
         "observedAt": observed_at,
@@ -724,7 +774,8 @@ def main():
         "windSpeed": wind_speed,
         "level": current_level,
         "previousLevel": previous_level,
-        "levelChanged": notify,
+        "levelChanged": notification_reason == "level_change",
+        "notificationReason": notification_reason,
         "teamsNotified": False,
         "apiStatus": weather.get("apiStatus", ""),
         "apiMessage": weather.get("apiMessage", "")
@@ -740,7 +791,7 @@ def main():
         print("No Teams notification because current level is 데이터없음.")
 
     elif notify:
-        title, message = build_message(config, current, previous_level)
+        title, message = build_message(config, current, previous_level, notification_reason)
         notified = send_teams_message(title, message)
         current["teamsNotified"] = notified
 
@@ -751,6 +802,13 @@ def main():
     save_json(DASHBOARD_DATA_PATH, current)
 
     if current_level != "데이터없음":
+        regular_reports = last_state.get("regularReports", {})
+        if not isinstance(regular_reports, dict):
+            regular_reports = {}
+
+        if notification_reason in ["regular_08", "regular_13"] and current["teamsNotified"]:
+            regular_reports[regular_report_key(dt)] = observed_at
+
         save_json(LAST_STATE_PATH, {
             "level": current_level,
             "apparentTemperature": apparent_temp,
@@ -759,7 +817,8 @@ def main():
             "humidity": humidity,
             "windSpeed": wind_speed,
             "awsStation": weather.get("stationId"),
-            "awsStationName": weather.get("stationName")
+            "awsStationName": weather.get("stationName"),
+            "regularReports": regular_reports
         })
     else:
         print("last_state.json was not updated because current level is 데이터없음.")
@@ -774,7 +833,8 @@ def main():
         "windSpeed": "" if wind_speed is None else wind_speed,
         "level": current_level,
         "previousLevel": previous_level,
-        "levelChanged": "Y" if notify else "N",
+        "levelChanged": "Y" if notification_reason == "level_change" else "N",
+        "notificationReason": notification_reason,
         "teamsNotified": "Y" if current["teamsNotified"] else "N",
         "apiStatus": current["apiStatus"],
         "apiMessage": current["apiMessage"],
@@ -810,6 +870,7 @@ if __name__ == "__main__":
                 "level": "데이터없음",
                 "previousLevel": "알수없음",
                 "levelChanged": False,
+                "notificationReason": "script_error",
                 "teamsNotified": False,
                 "apiStatus": "SCRIPT_ERROR",
                 "apiMessage": str(e)
@@ -829,6 +890,7 @@ if __name__ == "__main__":
                 "level": "데이터없음",
                 "previousLevel": "알수없음",
                 "levelChanged": "N",
+                "notificationReason": "script_error",
                 "teamsNotified": "N",
                 "apiStatus": "SCRIPT_ERROR",
                 "apiMessage": str(e),
