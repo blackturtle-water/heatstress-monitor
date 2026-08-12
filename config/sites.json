@@ -1,7 +1,24 @@
 {
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
-  "awsStation": "954",
+  "awsStations": [
+    {
+      "id": "898",
+      "name": "장생포"
+    },
+    {
+      "id": "954",
+      "name": "온산"
+    },
+    {
+      "id": "943",
+      "name": "매곡"
+    },
+    {
+      "id": "949",
+      "name": "정자"
+    }
+  ],
   "thresholds": {
     "normal": 31,
     "caution": 31,
