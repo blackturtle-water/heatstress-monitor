@@ -1,5 +1,6 @@
 import csv
 import json
+import math
 import os
 import sys
 import time
@@ -23,7 +24,11 @@ DASHBOARD_DATA_PATH = DOCS_DIR / "current.json"
 KMA_AUTH_KEY = os.environ.get("KMA_AUTH_KEY")
 TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK_URL")
 
-BASE_SENSIBLE_TEMP_URL = "https://apihub.kma.go.kr/api/typ02/openApi/LivingWthrIdxServiceV3/getSenTaIdxV3"
+AWS_URL_CANDIDATES = [
+    "https://apihub.kma.go.kr/api/typ01/url/kma_sfctm2.php",
+    "https://apihub.kma.go.kr/api/typ01/url/aws_min.php",
+    "https://apihub.kma.go.kr/api/typ01/url/nph-aws2_min.php"
+]
 
 
 def ensure_dirs():
@@ -54,14 +59,11 @@ def load_config():
     if not isinstance(config, dict):
         raise RuntimeError("config/sites.json is not valid JSON object.")
 
-    required_keys = ["siteName", "address", "areaNo"]
+    required_keys = ["siteName", "address", "awsStation"]
     missing = [key for key in required_keys if key not in config]
 
     if missing:
         raise RuntimeError(f"config/sites.json missing keys: {missing}")
-
-    if "requestCode" not in config:
-        config["requestCode"] = "A48"
 
     return config
 
@@ -70,11 +72,11 @@ def now_kst():
     return datetime.now(KST)
 
 
-def format_kma_time(dt):
-    return dt.strftime("%Y%m%d%H")
+def format_aws_time(dt):
+    return dt.strftime("%Y%m%d%H%M")
 
 
-def http_get_json(url, params):
+def http_get_text(url, params):
     query = urllib.parse.urlencode(params)
     full_url = f"{url}?{query}"
 
@@ -90,12 +92,17 @@ def http_get_json(url, params):
             )
 
             with urllib.request.urlopen(req, timeout=60) as response:
-                raw = response.read().decode("utf-8", errors="replace")
+                raw_bytes = response.read()
 
-            try:
-                return json.loads(raw), raw, full_url, None
-            except json.JSONDecodeError as e:
-                return None, raw, full_url, f"JSON_DECODE_ERROR: {e}"
+            for enc in ["utf-8", "euc-kr", "cp949"]:
+                try:
+                    text = raw_bytes.decode(enc)
+                    return text, full_url, None
+                except UnicodeDecodeError:
+                    continue
+
+            text = raw_bytes.decode("utf-8", errors="replace")
+            return text, full_url, None
 
         except Exception as e:
             last_error = str(e)
@@ -104,191 +111,263 @@ def http_get_json(url, params):
             if attempt < 3:
                 time.sleep(3 * attempt)
 
-    return None, "", full_url, f"HTTP_ERROR: {last_error}"
+    return "", full_url, f"HTTP_ERROR: {last_error}"
 
 
-def extract_first_number_from_text(value):
+def to_float(value):
     if value is None:
         return None
 
     text = str(value).strip()
-    candidate = ""
 
-    for ch in text:
-        if ch.isdigit() or ch in [".", "-"]:
-            candidate += ch
-        elif candidate:
-            break
-
-    if not candidate:
+    if text in ["", "-9", "-99", "-999", "-9999"]:
         return None
 
     try:
-        return float(candidate)
+        return float(text)
     except ValueError:
         return None
 
 
-def find_temperature_value(obj):
+def parse_aws_text(text, station):
     """
-    기상청 체감온도 API 응답 구조가 실제 응답마다 다를 수 있어
-    JSON 전체에서 체감온도 후보값을 최대한 안전하게 찾는다.
+    AWS 매분자료 텍스트 응답에서 최신 관측값을 추출한다.
+    우선 헤더가 있으면 헤더 기준으로 TA, HM, WS를 읽고,
+    헤더가 없으면 일반적인 AWS 매분자료 컬럼 순서로 보정한다.
     """
 
-    preferred_keys = [
-        "h3", "h6", "h9", "h12", "h15", "h18", "h21", "h24",
-        "sensibleTemperature",
-        "sensorytem",
-        "senTa",
-        "ta",
-        "value",
-        "idx",
-        "today",
-        "tomorrow",
-        "theDayAfterTomorrow"
-    ]
+    if not text or not text.strip():
+        return None, "EMPTY_RESPONSE"
 
-    found = []
+    lines = text.splitlines()
 
-    def walk(x):
-        if isinstance(x, dict):
-            for key in preferred_keys:
-                if key in x:
-                    val = extract_first_number_from_text(x.get(key))
-                    if val is not None:
-                        found.append((key, val))
+    header_tokens = None
+    data_rows = []
 
-            for v in x.values():
-                walk(v)
+    for raw_line in lines:
+        line = raw_line.strip()
 
-        elif isinstance(x, list):
-            for item in x:
-                walk(item)
+        if not line:
+            continue
 
-    walk(obj)
+        if line.startswith("#"):
+            candidate = line.lstrip("#").strip()
+            tokens = candidate.split()
 
-    if found:
-        return found[0][1], found
+            if "TA" in tokens and "HM" in tokens:
+                header_tokens = tokens
 
-    return None, found
+            continue
+
+        tokens = line.split()
+
+        if len(tokens) < 5:
+            continue
+
+        data_rows.append(tokens)
+
+    if not data_rows:
+        sample = text[:500].replace("\n", " ")
+        return None, f"NO_DATA_ROWS: {sample}"
+
+    target_rows = []
+
+    for row in data_rows:
+        if len(row) >= 2 and row[1] == str(station):
+            target_rows.append(row)
+
+    if not target_rows:
+        target_rows = data_rows
+
+    latest = target_rows[-1]
+
+    observed_time = latest[0] if len(latest) > 0 else None
+
+    temperature = None
+    humidity = None
+    wind_speed = None
+
+    if header_tokens:
+        def get_by_key(key):
+            if key not in header_tokens:
+                return None
+
+            idx = header_tokens.index(key)
+
+            if idx >= len(latest):
+                return None
+
+            return to_float(latest[idx])
+
+        temperature = get_by_key("TA")
+        humidity = get_by_key("HM")
+        wind_speed = get_by_key("WS")
+
+    if temperature is None or humidity is None:
+        """
+        일반적인 AWS 매분자료 컬럼 추정:
+        0 TM
+        1 STN
+        2 WD
+        3 WS
+        4 GST_WD
+        5 GST_WS
+        6 GST_TM
+        7 PA
+        8 PS
+        9 PT
+        10 PR
+        11 TA
+        12 TD
+        13 HM
+        """
+        if len(latest) > 13:
+            wind_speed = wind_speed if wind_speed is not None else to_float(latest[3])
+            temperature = temperature if temperature is not None else to_float(latest[11])
+            humidity = humidity if humidity is not None else to_float(latest[13])
+
+    if temperature is None or humidity is None:
+        return None, f"FAILED_TO_PARSE_VALUES: row={' '.join(latest)}"
+
+    return {
+        "observedTime": observed_time,
+        "temperature": temperature,
+        "humidity": humidity,
+        "windSpeed": wind_speed,
+        "rawRow": latest
+    }, None
 
 
-def get_heat_index(config):
+def get_aws_weather(config):
     if not KMA_AUTH_KEY:
         return {
-            "apparentTemperature": None,
-            "kmaTime": format_kma_time(now_kst()),
-            "requestCode": config.get("requestCode", "A48"),
-            "raw": None,
-            "url": None,
-            "candidates": [],
+            "temperature": None,
+            "humidity": None,
+            "windSpeed": None,
+            "observedTime": None,
             "apiStatus": "SECRET_MISSING",
             "apiMessage": "KMA_AUTH_KEY secret is missing.",
-            "attempts": []
+            "url": None
         }
+
+    station = str(config["awsStation"])
 
     current_time = now_kst()
 
-    primary_code = config.get("requestCode", "A48")
-
-    request_codes = [primary_code]
-
-    for code in ["A48", "A49", "A47", "A44", "A45", "A46"]:
-        if code not in request_codes:
-            request_codes.append(code)
-
     attempts = []
 
-    for hours_back in range(0, 25):
-        target_time = current_time - timedelta(hours=hours_back)
-        kma_time = format_kma_time(target_time)
+    for minutes_back in [10, 20, 30, 40, 50, 60, 90, 120, 180]:
+        target_time = current_time - timedelta(minutes=minutes_back)
+        tm2 = format_aws_time(target_time)
 
-        for request_code in request_codes:
-            params = {
-                "numOfRows": "10",
-                "pageNo": "1",
-                "dataType": "JSON",
-                "areaNo": config["areaNo"],
-                "time": kma_time,
-                "requestCode": request_code,
-                "authKey": KMA_AUTH_KEY
-            }
+        params = {
+            "tm1": "",
+            "tm2": tm2,
+            "stn": station,
+            "disp": "0",
+            "help": "1",
+            "authKey": KMA_AUTH_KEY
+        }
 
-            data, raw, full_url, error = http_get_json(BASE_SENSIBLE_TEMP_URL, params)
+        for url in AWS_URL_CANDIDATES:
+            text, full_url, error = http_get_text(url, params)
 
             if error:
                 attempts.append({
-                    "time": kma_time,
-                    "requestCode": request_code,
+                    "url": url,
+                    "tm2": tm2,
                     "status": "HTTP_ERROR",
                     "message": error
                 })
                 continue
 
-            if data is None:
-                attempts.append({
-                    "time": kma_time,
-                    "requestCode": request_code,
-                    "status": "NOT_JSON",
-                    "message": raw[:200]
-                })
-                continue
+            parsed, parse_error = parse_aws_text(text, station)
 
-            header = data.get("response", {}).get("header", {})
-            result_code = str(header.get("resultCode", ""))
-            result_msg = str(header.get("resultMsg", ""))
-
-            if result_code == "03" or result_msg == "NO_DATA":
-                attempts.append({
-                    "time": kma_time,
-                    "requestCode": request_code,
-                    "status": "NO_DATA",
-                    "message": result_msg
-                })
-                continue
-
-            apparent_temp, candidates = find_temperature_value(data)
-
-            if apparent_temp is not None:
+            if parsed:
                 return {
-                    "apparentTemperature": apparent_temp,
-                    "kmaTime": kma_time,
-                    "requestCode": request_code,
-                    "raw": data,
-                    "url": full_url,
-                    "candidates": candidates,
+                    "temperature": parsed["temperature"],
+                    "humidity": parsed["humidity"],
+                    "windSpeed": parsed["windSpeed"],
+                    "observedTime": parsed["observedTime"],
                     "apiStatus": "OK",
-                    "apiMessage": result_msg
+                    "apiMessage": "",
+                    "url": full_url,
+                    "rawRow": parsed["rawRow"]
                 }
 
             attempts.append({
-                "time": kma_time,
-                "requestCode": request_code,
-                "status": "NO_TEMPERATURE_VALUE",
-                "message": result_msg,
-                "sample": json.dumps(data, ensure_ascii=False)[:500]
+                "url": url,
+                "tm2": tm2,
+                "status": "PARSE_OR_NO_DATA",
+                "message": parse_error
             })
 
-    has_http_error = any(item.get("status") == "HTTP_ERROR" for item in attempts)
-
-    if has_http_error:
-        api_status = "TIMEOUT_OR_HTTP_ERROR"
-        api_message = "기상청 API 호출 중 타임아웃 또는 HTTP 오류 발생"
-    else:
-        api_status = "NO_DATA"
-        api_message = "최근 24시간 내 체감온도 데이터 없음"
-
     return {
-        "apparentTemperature": None,
-        "kmaTime": format_kma_time(current_time),
-        "requestCode": primary_code,
-        "raw": None,
+        "temperature": None,
+        "humidity": None,
+        "windSpeed": None,
+        "observedTime": None,
+        "apiStatus": "NO_DATA",
+        "apiMessage": "최근 관측자료를 가져오지 못했습니다.",
         "url": None,
-        "candidates": [],
-        "apiStatus": api_status,
-        "apiMessage": api_message,
-        "attempts": attempts
+        "attempts": attempts[:10]
     }
+
+
+def c_to_f(celsius):
+    return celsius * 9 / 5 + 32
+
+
+def f_to_c(fahrenheit):
+    return (fahrenheit - 32) * 5 / 9
+
+
+def calculate_heat_index_celsius(temp_c, rh):
+    """
+    NOAA/NWS Heat Index 계산식 기반.
+    입력:
+      temp_c: 섭씨 기온
+      rh: 상대습도 %
+    출력:
+      섭씨 체감온도
+    """
+
+    if temp_c is None or rh is None:
+        return None
+
+    temp_f = c_to_f(temp_c)
+
+    if temp_f < 80:
+        simple_hi_f = 0.5 * (
+            temp_f
+            + 61.0
+            + ((temp_f - 68.0) * 1.2)
+            + (rh * 0.094)
+        )
+        hi_f = (simple_hi_f + temp_f) / 2
+        return round(f_to_c(hi_f), 1)
+
+    hi_f = (
+        -42.379
+        + 2.04901523 * temp_f
+        + 10.14333127 * rh
+        - 0.22475541 * temp_f * rh
+        - 0.00683783 * temp_f * temp_f
+        - 0.05481717 * rh * rh
+        + 0.00122874 * temp_f * temp_f * rh
+        + 0.00085282 * temp_f * rh * rh
+        - 0.00000199 * temp_f * temp_f * rh * rh
+    )
+
+    if rh < 13 and 80 <= temp_f <= 112:
+        adjustment = ((13 - rh) / 4) * math.sqrt((17 - abs(temp_f - 95)) / 17)
+        hi_f = hi_f - adjustment
+
+    elif rh > 85 and 80 <= temp_f <= 87:
+        adjustment = ((rh - 85) / 10) * ((87 - temp_f) / 5)
+        hi_f = hi_f + adjustment
+
+    return round(f_to_c(hi_f), 1)
 
 
 def decide_level(temp):
@@ -357,7 +436,9 @@ def append_history(row):
         "levelChanged",
         "teamsNotified",
         "apiStatus",
-        "apiMessage"
+        "apiMessage",
+        "awsStation",
+        "awsObservedTime"
     ]
 
     with open(HISTORY_PATH, "a", newline="", encoding="utf-8-sig") as f:
@@ -372,6 +453,9 @@ def append_history(row):
 def build_message(config, current, previous_level):
     level = current["level"]
     temp = current["apparentTemperature"]
+    air_temp = current["temperature"]
+    humidity = current["humidity"]
+    wind_speed = current["windSpeed"]
     observed_at = current["observedAt"]
 
     if level == "정상":
@@ -414,9 +498,9 @@ def build_message(config, current, previous_level):
             "의식이 있는 경우 응급조치 후 증상 개선이 없으면 119에 신고해 주세요."
         ]
     else:
-        title = "⚪ [온열질환 데이터 없음] 체감온도 조회 실패"
+        title = "⚪ [온열질환 데이터 없음] AWS 관측자료 조회 실패"
         actions = [
-            "기상청 체감온도 데이터가 현재 조회되지 않았습니다.",
+            "AWS 관측자료 또는 체감온도 계산값을 현재 확인하지 못했습니다.",
             "대시보드의 API 상태를 확인해 주세요."
         ]
 
@@ -430,6 +514,9 @@ def build_message(config, current, previous_level):
     bullet_actions = "\n".join([f"- {item}" for item in actions])
 
     temp_text = "-" if temp is None else f"{temp:.1f}℃"
+    air_temp_text = "-" if air_temp is None else f"{air_temp:.1f}℃"
+    humidity_text = "-" if humidity is None else f"{humidity:.0f}%"
+    wind_text = "-" if wind_speed is None else f"{wind_speed:.1f} m/s"
 
     text = f"""
 {title}
@@ -437,8 +524,13 @@ def build_message(config, current, previous_level):
 📍 지역: {config["siteName"]}
 🏭 주소: {config["address"]}
 🕒 조회시각: {observed_at}
+📡 AWS 지점: {config["awsStation"]}
 
-🌡 현재 체감온도: {temp_text}
+🌡 체감온도: {temp_text}
+🌡 기온: {air_temp_text}
+💧 습도: {humidity_text}
+🌬 풍속: {wind_text}
+
 📊 {direction}: {previous_level} → {level}
 
 ✅ 권고조치
@@ -517,21 +609,6 @@ def send_teams_message(title, text):
 
 
 def should_notify(previous_level, current_level):
-    """
-    Teams 알림 정책
-
-    1. 데이터없음이면 알림 안 보냄
-    2. 정상 유지이면 알림 안 보냄
-    3. 같은 단계 유지이면 알림 안 보냄
-    4. 단계가 바뀌면 알림 보냄
-       - 정상 → 주의
-       - 주의 → 경계
-       - 경계 → 위험
-       - 위험 → 경계
-       - 주의 → 정상
-       - 기타 단계 상승/하향 포함
-    """
-
     if current_level == "데이터없음":
         return False
 
@@ -548,8 +625,13 @@ def main():
 
     observed_at = now_kst().strftime("%Y-%m-%d %H:%M:%S")
 
-    heat = get_heat_index(config)
-    apparent_temp = heat["apparentTemperature"]
+    weather = get_aws_weather(config)
+
+    temperature = weather["temperature"]
+    humidity = weather["humidity"]
+    wind_speed = weather["windSpeed"]
+
+    apparent_temp = calculate_heat_index_celsius(temperature, humidity)
 
     current_level = decide_level(apparent_temp)
     previous_level = last_state.get("level", "정상")
@@ -560,27 +642,26 @@ def main():
         "observedAt": observed_at,
         "siteName": config["siteName"],
         "address": config["address"],
-        "areaNo": config["areaNo"],
-        "requestCode": heat.get("requestCode", config.get("requestCode", "A48")),
+        "awsStation": config["awsStation"],
+        "awsObservedTime": weather.get("observedTime"),
         "apparentTemperature": apparent_temp,
-        "temperature": None,
-        "humidity": None,
-        "windSpeed": None,
+        "temperature": temperature,
+        "humidity": humidity,
+        "windSpeed": wind_speed,
         "level": current_level,
         "previousLevel": previous_level,
         "levelChanged": notify,
         "teamsNotified": False,
-        "apiStatus": heat.get("apiStatus", ""),
-        "apiMessage": heat.get("apiMessage", ""),
-        "kmaTime": heat.get("kmaTime", "")
+        "apiStatus": weather.get("apiStatus", ""),
+        "apiMessage": weather.get("apiMessage", "")
     }
 
-    if apparent_temp is None:
-        print("KMA heat index data is not available.")
+    if current_level == "데이터없음":
+        print("AWS weather data is not available.")
         print(json.dumps({
-            "apiStatus": heat.get("apiStatus"),
-            "apiMessage": heat.get("apiMessage"),
-            "attemptsSample": heat.get("attempts", [])[:10]
+            "apiStatus": weather.get("apiStatus"),
+            "apiMessage": weather.get("apiMessage"),
+            "attemptsSample": weather.get("attempts", [])[:10]
         }, ensure_ascii=False, indent=2))
         print("No Teams notification because current level is 데이터없음.")
 
@@ -599,7 +680,10 @@ def main():
         save_json(LAST_STATE_PATH, {
             "level": current_level,
             "apparentTemperature": apparent_temp,
-            "observedAt": observed_at
+            "observedAt": observed_at,
+            "temperature": temperature,
+            "humidity": humidity,
+            "windSpeed": wind_speed
         })
     else:
         print("last_state.json was not updated because current level is 데이터없음.")
@@ -609,15 +693,17 @@ def main():
         "siteName": config["siteName"],
         "address": config["address"],
         "apparentTemperature": "" if apparent_temp is None else apparent_temp,
-        "temperature": "",
-        "humidity": "",
-        "windSpeed": "",
+        "temperature": "" if temperature is None else temperature,
+        "humidity": "" if humidity is None else humidity,
+        "windSpeed": "" if wind_speed is None else wind_speed,
         "level": current_level,
         "previousLevel": previous_level,
         "levelChanged": "Y" if notify else "N",
         "teamsNotified": "Y" if current["teamsNotified"] else "N",
         "apiStatus": current["apiStatus"],
-        "apiMessage": current["apiMessage"]
+        "apiMessage": current["apiMessage"],
+        "awsStation": config["awsStation"],
+        "awsObservedTime": weather.get("observedTime") or ""
     })
 
     print("Current status:")
@@ -637,8 +723,8 @@ if __name__ == "__main__":
                 "observedAt": now_kst().strftime("%Y-%m-%d %H:%M:%S"),
                 "siteName": "유니드 울산공장",
                 "address": "울산광역시 남구 상개로 142",
-                "areaNo": "3114064000",
-                "requestCode": "A48",
+                "awsStation": "954",
+                "awsObservedTime": None,
                 "apparentTemperature": None,
                 "temperature": None,
                 "humidity": None,
@@ -648,8 +734,7 @@ if __name__ == "__main__":
                 "levelChanged": False,
                 "teamsNotified": False,
                 "apiStatus": "SCRIPT_ERROR",
-                "apiMessage": str(e),
-                "kmaTime": ""
+                "apiMessage": str(e)
             }
 
             save_json(CURRENT_PATH, error_status)
@@ -668,7 +753,9 @@ if __name__ == "__main__":
                 "levelChanged": "N",
                 "teamsNotified": "N",
                 "apiStatus": "SCRIPT_ERROR",
-                "apiMessage": str(e)
+                "apiMessage": str(e),
+                "awsStation": "954",
+                "awsObservedTime": ""
             })
 
             print("Script error was recorded to dashboard data.")
