@@ -24,11 +24,7 @@ DASHBOARD_DATA_PATH = DOCS_DIR / "current.json"
 KMA_AUTH_KEY = os.environ.get("KMA_AUTH_KEY")
 TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK_URL")
 
-AWS_URL_CANDIDATES = [
-    "https://apihub.kma.go.kr/api/typ01/url/kma_sfctm2.php",
-    "https://apihub.kma.go.kr/api/typ01/url/aws_min.php",
-    "https://apihub.kma.go.kr/api/typ01/url/nph-aws2_min.php"
-]
+AWS_URL = "https://apihub.kma.go.kr/api/typ01/cgi-bin/url/nph-aws2_min"
 
 
 def ensure_dirs():
@@ -82,7 +78,7 @@ def http_get_text(url, params):
 
     last_error = None
 
-    for attempt in range(1, 4):
+    for attempt in range(1, 3):
         try:
             req = urllib.request.Request(
                 full_url,
@@ -91,7 +87,7 @@ def http_get_text(url, params):
                 }
             )
 
-            with urllib.request.urlopen(req, timeout=60) as response:
+            with urllib.request.urlopen(req, timeout=20) as response:
                 raw_bytes = response.read()
 
             for enc in ["utf-8", "euc-kr", "cp949"]:
@@ -106,10 +102,10 @@ def http_get_text(url, params):
 
         except Exception as e:
             last_error = str(e)
-            print(f"[WARN] HTTP request failed. attempt={attempt}/3 error={last_error}")
+            print(f"[WARN] HTTP request failed. attempt={attempt}/2 error={last_error}")
 
-            if attempt < 3:
-                time.sleep(3 * attempt)
+            if attempt < 2:
+                time.sleep(3)
 
     return "", full_url, f"HTTP_ERROR: {last_error}"
 
@@ -130,12 +126,6 @@ def to_float(value):
 
 
 def parse_aws_text(text, station):
-    """
-    AWS 매분자료 텍스트 응답에서 최신 관측값을 추출한다.
-    우선 헤더가 있으면 헤더 기준으로 TA, HM, WS를 읽고,
-    헤더가 없으면 일반적인 AWS 매분자료 컬럼 순서로 보정한다.
-    """
-
     if not text or not text.strip():
         return None, "EMPTY_RESPONSE"
 
@@ -167,7 +157,7 @@ def parse_aws_text(text, station):
         data_rows.append(tokens)
 
     if not data_rows:
-        sample = text[:500].replace("\n", " ")
+        sample = text[:800].replace("\n", " ")
         return None, f"NO_DATA_ROWS: {sample}"
 
     target_rows = []
@@ -204,23 +194,6 @@ def parse_aws_text(text, station):
         wind_speed = get_by_key("WS")
 
     if temperature is None or humidity is None:
-        """
-        일반적인 AWS 매분자료 컬럼 추정:
-        0 TM
-        1 STN
-        2 WD
-        3 WS
-        4 GST_WD
-        5 GST_WS
-        6 GST_TM
-        7 PA
-        8 PS
-        9 PT
-        10 PR
-        11 TA
-        12 TD
-        13 HM
-        """
         if len(latest) > 13:
             wind_speed = wind_speed if wind_speed is not None else to_float(latest[3])
             temperature = temperature if temperature is not None else to_float(latest[11])
@@ -251,12 +224,11 @@ def get_aws_weather(config):
         }
 
     station = str(config["awsStation"])
-
     current_time = now_kst()
 
     attempts = []
 
-    for minutes_back in [10, 20, 30, 40, 50, 60, 90, 120, 180]:
+    for minutes_back in [10, 20, 30, 40, 50, 60, 90, 120]:
         target_time = current_time - timedelta(minutes=minutes_back)
         tm2 = format_aws_time(target_time)
 
@@ -269,38 +241,35 @@ def get_aws_weather(config):
             "authKey": KMA_AUTH_KEY
         }
 
-        for url in AWS_URL_CANDIDATES:
-            text, full_url, error = http_get_text(url, params)
+        text, full_url, error = http_get_text(AWS_URL, params)
 
-            if error:
-                attempts.append({
-                    "url": url,
-                    "tm2": tm2,
-                    "status": "HTTP_ERROR",
-                    "message": error
-                })
-                continue
-
-            parsed, parse_error = parse_aws_text(text, station)
-
-            if parsed:
-                return {
-                    "temperature": parsed["temperature"],
-                    "humidity": parsed["humidity"],
-                    "windSpeed": parsed["windSpeed"],
-                    "observedTime": parsed["observedTime"],
-                    "apiStatus": "OK",
-                    "apiMessage": "",
-                    "url": full_url,
-                    "rawRow": parsed["rawRow"]
-                }
-
+        if error:
             attempts.append({
-                "url": url,
                 "tm2": tm2,
-                "status": "PARSE_OR_NO_DATA",
-                "message": parse_error
+                "status": "HTTP_ERROR",
+                "message": error
             })
+            continue
+
+        parsed, parse_error = parse_aws_text(text, station)
+
+        if parsed:
+            return {
+                "temperature": parsed["temperature"],
+                "humidity": parsed["humidity"],
+                "windSpeed": parsed["windSpeed"],
+                "observedTime": parsed["observedTime"],
+                "apiStatus": "OK",
+                "apiMessage": "",
+                "url": full_url,
+                "rawRow": parsed["rawRow"]
+            }
+
+        attempts.append({
+            "tm2": tm2,
+            "status": "PARSE_OR_NO_DATA",
+            "message": parse_error
+        })
 
     return {
         "temperature": None,
@@ -308,7 +277,7 @@ def get_aws_weather(config):
         "windSpeed": None,
         "observedTime": None,
         "apiStatus": "NO_DATA",
-        "apiMessage": "최근 관측자료를 가져오지 못했습니다.",
+        "apiMessage": "최근 AWS 관측자료를 가져오지 못했습니다.",
         "url": None,
         "attempts": attempts[:10]
     }
@@ -323,15 +292,6 @@ def f_to_c(fahrenheit):
 
 
 def calculate_heat_index_celsius(temp_c, rh):
-    """
-    NOAA/NWS Heat Index 계산식 기반.
-    입력:
-      temp_c: 섭씨 기온
-      rh: 상대습도 %
-    출력:
-      섭씨 체감온도
-    """
-
     if temp_c is None or rh is None:
         return None
 
@@ -501,7 +461,7 @@ def build_message(config, current, previous_level):
         title = "⚪ [온열질환 데이터 없음] AWS 관측자료 조회 실패"
         actions = [
             "AWS 관측자료 또는 체감온도 계산값을 현재 확인하지 못했습니다.",
-            "대시보드의 API 상태를 확인해 주세요."
+            "GitHub Actions 로그와 data/current.json 상태를 확인해 주세요."
         ]
 
     direction = "단계변경"
@@ -577,7 +537,7 @@ def send_teams_message(title, text):
 
     last_error = None
 
-    for attempt in range(1, 4):
+    for attempt in range(1, 3):
         try:
             req = urllib.request.Request(
                 TEAMS_WEBHOOK_URL,
@@ -588,7 +548,7 @@ def send_teams_message(title, text):
                 method="POST"
             )
 
-            with urllib.request.urlopen(req, timeout=60) as response:
+            with urllib.request.urlopen(req, timeout=20) as response:
                 status = response.status
                 body = response.read().decode("utf-8", errors="replace")
 
@@ -599,10 +559,10 @@ def send_teams_message(title, text):
 
         except Exception as e:
             last_error = str(e)
-            print(f"[WARN] Teams webhook failed. attempt={attempt}/3 error={last_error}")
+            print(f"[WARN] Teams webhook failed. attempt={attempt}/2 error={last_error}")
 
-            if attempt < 3:
-                time.sleep(3 * attempt)
+            if attempt < 2:
+                time.sleep(3)
 
     print(f"[WARN] Teams notification failed after retries: {last_error}")
     return False
