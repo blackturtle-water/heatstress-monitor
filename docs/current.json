@@ -1,5 +1,5 @@
 {
-  "observedAt": "2026-08-12 10:13:01",
+  "observedAt": "2026-08-12 10:29:39",
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "areaNo": "3114064000",
@@ -9,7 +9,7 @@
   "humidity": null,
   "windSpeed": null,
   "level": "데이터없음",
-  "previousLevel": "정상",
+  "previousLevel": "위험",
   "levelChanged": false,
   "teamsNotified": false,
   "apiStatus": "NO_DATA",
