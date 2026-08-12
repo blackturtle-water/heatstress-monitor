@@ -24,7 +24,11 @@ DASHBOARD_DATA_PATH = DOCS_DIR / "current.json"
 KMA_AUTH_KEY = os.environ.get("KMA_AUTH_KEY")
 TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK_URL")
 
-AWS_URL = "https://apihub.kma.go.kr/api/typ01/cgi-bin/url/nph-aws2_min"
+# 기상청 API Hub에서 발행된 AWS 매분자료 URL
+AWS_URL_CANDIDATES = [
+    "https://apihub.kma.go.kr/api/typ01/cgi-bin/url/nph-aws2_min",
+    "https://apihub.kma.go.kr/api/typ01/url/nph-aws2_min.php",
+]
 
 
 def ensure_dirs():
@@ -84,7 +88,8 @@ def http_get_text(url, params):
             }
         )
 
-        with urllib.request.urlopen(req, timeout=10) as response:
+        # 너무 오래 걸리지 않도록 6초만 대기
+        with urllib.request.urlopen(req, timeout=6) as response:
             raw_bytes = response.read()
 
         for enc in ["utf-8", "euc-kr", "cp949"]:
@@ -137,6 +142,7 @@ def to_float(value):
 
     return number
 
+
 def is_data_row(tokens, station):
     if len(tokens) < 2:
         return False
@@ -180,7 +186,7 @@ def parse_aws_text(text, station):
             data_rows.append(tokens)
 
     if not data_rows:
-        sample = text[:2000].replace("\n", " ")
+        sample = text[:1500].replace("\n", " ")
         return None, f"NO_DATA_ROWS: {sample}"
 
     def parse_row(row):
@@ -190,22 +196,21 @@ def parse_aws_text(text, station):
         humidity = None
         wind_speed = None
 
+        # 1차: 헤더 기준 파싱
         if header_tokens:
             def get_by_key(*keys):
                 for key in keys:
                     if key in header_tokens:
                         idx = header_tokens.index(key)
-
                         if idx < len(row):
                             return to_float(row[idx])
-
                 return None
 
             temperature = get_by_key("TA", "TEMP", "T")
             humidity = get_by_key("HM", "RH", "HUMIDITY")
             wind_speed = get_by_key("WS", "WSPD", "WIND", "WIND_SPEED")
 
-        # fallback: 일반적인 AWS 매분자료 컬럼 추정
+        # 2차: 일반적인 AWS 매분자료 컬럼 위치 기준 보정
         #
         # 0 TM
         # 1 STN
@@ -242,7 +247,7 @@ def parse_aws_text(text, station):
             "rawRow": row
         }
 
-    # 최신값부터 과거 방향으로 보면서 유효한 관측값 찾기
+    # 최신값부터 과거 방향으로 유효값 찾기
     for row in reversed(data_rows):
         parsed = parse_row(row)
 
@@ -251,6 +256,7 @@ def parse_aws_text(text, station):
 
     last_row = " ".join(data_rows[-1]) if data_rows else ""
     return None, f"NO_VALID_OBSERVATION_VALUES: last_row={last_row}"
+
 
 def get_aws_weather(config):
     if not KMA_AUTH_KEY:
@@ -268,68 +274,66 @@ def get_aws_weather(config):
     station = str(config["awsStation"])
     current_time = now_kst()
 
-    # AWS 자료는 최신 시각에 결측이 있을 수 있으므로
-    # 최근 3시간 범위를 한 번에 조회해서 최신 유효 관측값을 찾는다.
-    tm2_time = current_time - timedelta(minutes=10)
-    tm1_time = current_time - timedelta(hours=3)
+    attempts = []
 
-    tm1 = format_aws_time(tm1_time)
-    tm2 = format_aws_time(tm2_time)
+    # tm2 단일 조회만 사용
+    # 최신 시각에는 -99.9 결측이 나올 수 있으므로 여러 시각을 짧게 확인
+    minutes_back_list = [5, 10, 15, 20, 30, 45, 60, 90, 120]
 
-    params = {
-        "tm1": tm1,
-        "tm2": tm2,
-        "stn": station,
-        "disp": "0",
-        "help": "1",
-        "authKey": KMA_AUTH_KEY
-    }
+    for minutes_back in minutes_back_list:
+        target_time = current_time - timedelta(minutes=minutes_back)
+        tm2 = format_aws_time(target_time)
 
-    text, full_url, error = http_get_text(AWS_URL, params)
+        params = {
+            "tm2": tm2,
+            "stn": station,
+            "disp": "0",
+            "help": "1",
+            "authKey": KMA_AUTH_KEY
+        }
 
-    print(f"[DEBUG] AWS request tm1={tm1}, tm2={tm2}, stn={station}")
-    print(f"[DEBUG] AWS URL without key: {AWS_URL}?tm1={tm1}&tm2={tm2}&stn={station}&disp=0&help=1&authKey=***")
+        for aws_url in AWS_URL_CANDIDATES:
+            text, full_url, error = http_get_text(aws_url, params)
 
-    if error:
-        print(f"[WARN] AWS HTTP error: {error}")
+            print(f"[DEBUG] AWS request tm2={tm2}, stn={station}")
+            print(f"[DEBUG] AWS URL without key: {aws_url}?tm2={tm2}&stn={station}&disp=0&help=1&authKey=***")
 
-        return {
-            "temperature": None,
-            "humidity": None,
-            "windSpeed": None,
-            "observedTime": None,
-            "apiStatus": "HTTP_ERROR",
-            "apiMessage": error,
-            "url": full_url,
-            "attempts": [
-                {
-                    "tm1": tm1,
+            if error:
+                attempts.append({
                     "tm2": tm2,
+                    "url": aws_url,
                     "status": "HTTP_ERROR",
                     "message": error
+                })
+                print(f"[WARN] AWS HTTP error: {error}")
+                continue
+
+            print("[DEBUG] AWS response sample start")
+            print(text[:1500])
+            print("[DEBUG] AWS response sample end")
+
+            parsed, parse_error = parse_aws_text(text, station)
+
+            if parsed:
+                return {
+                    "temperature": parsed["temperature"],
+                    "humidity": parsed["humidity"],
+                    "windSpeed": parsed["windSpeed"],
+                    "observedTime": parsed["observedTime"],
+                    "apiStatus": "OK",
+                    "apiMessage": "",
+                    "url": full_url,
+                    "rawRow": parsed["rawRow"]
                 }
-            ]
-        }
 
-    print("[DEBUG] AWS response sample start")
-    print(text[:3000])
-    print("[DEBUG] AWS response sample end")
+            attempts.append({
+                "tm2": tm2,
+                "url": aws_url,
+                "status": "PARSE_OR_NO_VALID_DATA",
+                "message": parse_error
+            })
 
-    parsed, parse_error = parse_aws_text(text, station)
-
-    if parsed:
-        return {
-            "temperature": parsed["temperature"],
-            "humidity": parsed["humidity"],
-            "windSpeed": parsed["windSpeed"],
-            "observedTime": parsed["observedTime"],
-            "apiStatus": "OK",
-            "apiMessage": "",
-            "url": full_url,
-            "rawRow": parsed["rawRow"]
-        }
-
-    print(f"[WARN] AWS parse failed: {parse_error}")
+            print(f"[WARN] AWS parse failed: {parse_error}")
 
     return {
         "temperature": None,
@@ -337,16 +341,9 @@ def get_aws_weather(config):
         "windSpeed": None,
         "observedTime": None,
         "apiStatus": "NO_DATA",
-        "apiMessage": "최근 3시간 AWS 관측자료 중 유효한 기온/습도 값을 찾지 못했습니다.",
-        "url": full_url,
-        "attempts": [
-            {
-                "tm1": tm1,
-                "tm2": tm2,
-                "status": "PARSE_OR_NO_VALID_DATA",
-                "message": parse_error
-            }
-        ]
+        "apiMessage": "최근 AWS 관측자료 중 유효한 기온/습도 값을 찾지 못했습니다.",
+        "url": None,
+        "attempts": attempts[:20]
     }
 
 
@@ -364,6 +361,7 @@ def calculate_heat_index_celsius(temp_c, rh):
 
     temp_f = c_to_f(temp_c)
 
+    # NOAA/NWS simple formula for lower heat index range
     if temp_f < 80:
         simple_hi_f = 0.5 * (
             temp_f
@@ -374,6 +372,7 @@ def calculate_heat_index_celsius(temp_c, rh):
         hi_f = (simple_hi_f + temp_f) / 2
         return round(f_to_c(hi_f), 1)
 
+    # Rothfusz regression
     hi_f = (
         -42.379
         + 2.04901523 * temp_f
@@ -612,7 +611,7 @@ def send_teams_message(title, text):
             method="POST"
         )
 
-        with urllib.request.urlopen(req, timeout=10) as response:
+        with urllib.request.urlopen(req, timeout=8) as response:
             status = response.status
             body = response.read().decode("utf-8", errors="replace")
 
@@ -679,7 +678,7 @@ def main():
         print(json.dumps({
             "apiStatus": weather.get("apiStatus"),
             "apiMessage": weather.get("apiMessage"),
-            "attemptsSample": weather.get("attempts", [])[:10]
+            "attemptsSample": weather.get("attempts", [])[:20]
         }, ensure_ascii=False, indent=2))
         print("No Teams notification because current level is 데이터없음.")
 
