@@ -1,17 +1,17 @@
 {
-  "observedAt": "2026-08-12 13:29:36",
+  "observedAt": "2026-08-12 13:33:58",
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "954",
-  "awsObservedTime": "202608121319",
-  "apparentTemperature": 28.3,
-  "temperature": 26.9,
-  "humidity": 65.0,
+  "awsObservedTime": null,
+  "apparentTemperature": null,
+  "temperature": null,
+  "humidity": null,
   "windSpeed": null,
-  "level": "정상",
-  "previousLevel": "위험",
-  "levelChanged": true,
-  "teamsNotified": true,
-  "apiStatus": "OK",
-  "apiMessage": ""
+  "level": "데이터없음",
+  "previousLevel": "정상",
+  "levelChanged": false,
+  "teamsNotified": false,
+  "apiStatus": "NO_DATA",
+  "apiMessage": "최근 AWS 관측자료를 가져오지 못했습니다."
 }
