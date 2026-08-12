@@ -76,38 +76,29 @@ def http_get_text(url, params):
     query = urllib.parse.urlencode(params)
     full_url = f"{url}?{query}"
 
-    last_error = None
+    try:
+        req = urllib.request.Request(
+            full_url,
+            headers={
+                "User-Agent": "heatstress-monitor/1.0"
+            }
+        )
 
-    for attempt in range(1, 3):
-        try:
-            req = urllib.request.Request(
-                full_url,
-                headers={
-                    "User-Agent": "heatstress-monitor/1.0"
-                }
-            )
+        with urllib.request.urlopen(req, timeout=10) as response:
+            raw_bytes = response.read()
 
-            with urllib.request.urlopen(req, timeout=20) as response:
-                raw_bytes = response.read()
+        for enc in ["utf-8", "euc-kr", "cp949"]:
+            try:
+                text = raw_bytes.decode(enc)
+                return text, full_url, None
+            except UnicodeDecodeError:
+                continue
 
-            for enc in ["utf-8", "euc-kr", "cp949"]:
-                try:
-                    text = raw_bytes.decode(enc)
-                    return text, full_url, None
-                except UnicodeDecodeError:
-                    continue
+        text = raw_bytes.decode("utf-8", errors="replace")
+        return text, full_url, None
 
-            text = raw_bytes.decode("utf-8", errors="replace")
-            return text, full_url, None
-
-        except Exception as e:
-            last_error = str(e)
-            print(f"[WARN] HTTP request failed. attempt={attempt}/2 error={last_error}")
-
-            if attempt < 2:
-                time.sleep(3)
-
-    return "", full_url, f"HTTP_ERROR: {last_error}"
+    except Exception as e:
+        return "", full_url, f"HTTP_ERROR: {e}"
 
 
 def to_float(value):
@@ -116,13 +107,26 @@ def to_float(value):
 
     text = str(value).strip()
 
-    if text in ["", "-9", "-99", "-999", "-9999"]:
+    if text in ["", "-9", "-99", "-999", "-9999", "-"]:
         return None
 
     try:
         return float(text)
     except ValueError:
         return None
+
+
+def is_data_row(tokens, station):
+    if len(tokens) < 2:
+        return False
+
+    if not tokens[0].isdigit():
+        return False
+
+    if len(tokens[0]) not in [10, 12]:
+        return False
+
+    return tokens[1] == str(station)
 
 
 def parse_aws_text(text, station):
@@ -144,7 +148,6 @@ def parse_aws_text(text, station):
             candidate = line.lstrip("#").strip()
             tokens = candidate.split()
 
-            # AWS 자료 헤더로 보이는 줄 저장
             if "TA" in tokens or "HM" in tokens or "WS" in tokens:
                 header_tokens = tokens
 
@@ -152,33 +155,21 @@ def parse_aws_text(text, station):
 
         tokens = line.split()
 
-        if len(tokens) < 5:
-            continue
-
-        data_rows.append(tokens)
+        if is_data_row(tokens, station):
+            data_rows.append(tokens)
 
     if not data_rows:
-        sample = text[:800].replace("\n", " ")
+        sample = text[:2000].replace("\n", " ")
         return None, f"NO_DATA_ROWS: {sample}"
 
-    target_rows = []
+    latest = data_rows[-1]
 
-    for row in data_rows:
-        if len(row) >= 2 and row[1] == str(station):
-            target_rows.append(row)
-
-    if not target_rows:
-        target_rows = data_rows
-
-    latest = target_rows[-1]
-
-    observed_time = latest[0] if len(latest) > 0 else None
+    observed_time = latest[0]
 
     temperature = None
     humidity = None
     wind_speed = None
 
-    # 1차: 헤더 기준 파싱
     if header_tokens:
         def get_by_key(*keys):
             for key in keys:
@@ -194,9 +185,8 @@ def parse_aws_text(text, station):
         humidity = get_by_key("HM", "RH", "HUMIDITY")
         wind_speed = get_by_key("WS", "WSPD", "WIND", "WIND_SPEED")
 
-    # 2차: 일반적인 AWS 매분자료 컬럼 위치 기준 보정
+    # fallback: 일반적인 AWS 매분자료 컬럼 추정
     #
-    # 일반적인 AWS 매분자료 컬럼 추정:
     # 0 TM
     # 1 STN
     # 2 WD
@@ -232,6 +222,7 @@ def parse_aws_text(text, station):
         "rawRow": latest
     }, None
 
+
 def get_aws_weather(config):
     if not KMA_AUTH_KEY:
         return {
@@ -241,7 +232,8 @@ def get_aws_weather(config):
             "observedTime": None,
             "apiStatus": "SECRET_MISSING",
             "apiMessage": "KMA_AUTH_KEY secret is missing.",
-            "url": None
+            "url": None,
+            "attempts": []
         }
 
     station = str(config["awsStation"])
@@ -249,12 +241,12 @@ def get_aws_weather(config):
 
     attempts = []
 
-    for minutes_back in [10, 20, 30, 40, 50, 60, 90, 120]:
+    # 너무 오래 돌지 않도록 최근 10분, 20분, 30분만 확인
+    for minutes_back in [10, 20, 30]:
         target_time = current_time - timedelta(minutes=minutes_back)
         tm2 = format_aws_time(target_time)
 
         params = {
-            "tm1": "",
             "tm2": tm2,
             "stn": station,
             "disp": "0",
@@ -264,13 +256,21 @@ def get_aws_weather(config):
 
         text, full_url, error = http_get_text(AWS_URL, params)
 
+        print(f"[DEBUG] AWS request tm2={tm2}, stn={station}")
+        print(f"[DEBUG] AWS URL without key: {AWS_URL}?tm2={tm2}&stn={station}&disp=0&help=1&authKey=***")
+
         if error:
             attempts.append({
                 "tm2": tm2,
                 "status": "HTTP_ERROR",
                 "message": error
             })
+            print(f"[WARN] AWS HTTP error: {error}")
             continue
+
+        print("[DEBUG] AWS response sample start")
+        print(text[:2000])
+        print("[DEBUG] AWS response sample end")
 
         parsed, parse_error = parse_aws_text(text, station)
 
@@ -292,6 +292,8 @@ def get_aws_weather(config):
             "message": parse_error
         })
 
+        print(f"[WARN] AWS parse failed: {parse_error}")
+
     return {
         "temperature": None,
         "humidity": None,
@@ -300,7 +302,7 @@ def get_aws_weather(config):
         "apiStatus": "NO_DATA",
         "apiMessage": "최근 AWS 관측자료를 가져오지 못했습니다.",
         "url": None,
-        "attempts": attempts[:10]
+        "attempts": attempts
     }
 
 
@@ -556,37 +558,28 @@ def send_teams_message(title, text):
 
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
 
-    last_error = None
+    try:
+        req = urllib.request.Request(
+            TEAMS_WEBHOOK_URL,
+            data=data,
+            headers={
+                "Content-Type": "application/json"
+            },
+            method="POST"
+        )
 
-    for attempt in range(1, 3):
-        try:
-            req = urllib.request.Request(
-                TEAMS_WEBHOOK_URL,
-                data=data,
-                headers={
-                    "Content-Type": "application/json"
-                },
-                method="POST"
-            )
+        with urllib.request.urlopen(req, timeout=10) as response:
+            status = response.status
+            body = response.read().decode("utf-8", errors="replace")
 
-            with urllib.request.urlopen(req, timeout=20) as response:
-                status = response.status
-                body = response.read().decode("utf-8", errors="replace")
+        print(f"Teams response status: {status}")
+        print(f"Teams response body: {body[:300]}")
 
-            print(f"Teams response status: {status}")
-            print(f"Teams response body: {body[:300]}")
+        return 200 <= status < 300
 
-            return 200 <= status < 300
-
-        except Exception as e:
-            last_error = str(e)
-            print(f"[WARN] Teams webhook failed. attempt={attempt}/2 error={last_error}")
-
-            if attempt < 2:
-                time.sleep(3)
-
-    print(f"[WARN] Teams notification failed after retries: {last_error}")
-    return False
+    except Exception as e:
+        print(f"[WARN] Teams notification failed: {e}")
+        return False
 
 
 def should_notify(previous_level, current_level):
