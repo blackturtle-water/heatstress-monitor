@@ -2,6 +2,7 @@ import csv
 import json
 import os
 import sys
+import time
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -77,20 +78,33 @@ def http_get_json(url, params):
     query = urllib.parse.urlencode(params)
     full_url = f"{url}?{query}"
 
-    req = urllib.request.Request(
-        full_url,
-        headers={
-            "User-Agent": "heatstress-monitor/1.0"
-        }
-    )
+    last_error = None
 
-    with urllib.request.urlopen(req, timeout=30) as response:
-        raw = response.read().decode("utf-8", errors="replace")
+    for attempt in range(1, 4):
+        try:
+            req = urllib.request.Request(
+                full_url,
+                headers={
+                    "User-Agent": "heatstress-monitor/1.0"
+                }
+            )
 
-    try:
-        return json.loads(raw), raw, full_url
-    except json.JSONDecodeError:
-        return None, raw, full_url
+            with urllib.request.urlopen(req, timeout=60) as response:
+                raw = response.read().decode("utf-8", errors="replace")
+
+            try:
+                return json.loads(raw), raw, full_url, None
+            except json.JSONDecodeError as e:
+                return None, raw, full_url, f"JSON_DECODE_ERROR: {e}"
+
+        except Exception as e:
+            last_error = str(e)
+            print(f"[WARN] HTTP request failed. attempt={attempt}/3 error={last_error}")
+
+            if attempt < 3:
+                time.sleep(3 * attempt)
+
+    return None, "", full_url, f"HTTP_ERROR: {last_error}"
 
 
 def extract_first_number_from_text(value):
@@ -117,7 +131,7 @@ def extract_first_number_from_text(value):
 
 def find_temperature_value(obj):
     """
-    기상청 API 응답 구조가 실제 응답마다 다를 수 있어서,
+    기상청 체감온도 API 응답 구조가 실제 응답마다 다를 수 있어
     JSON 전체에서 체감온도 후보값을 최대한 안전하게 찾는다.
     """
 
@@ -161,7 +175,17 @@ def find_temperature_value(obj):
 
 def get_heat_index(config):
     if not KMA_AUTH_KEY:
-        raise RuntimeError("KMA_AUTH_KEY secret is missing.")
+        return {
+            "apparentTemperature": None,
+            "kmaTime": format_kma_time(now_kst()),
+            "requestCode": config.get("requestCode", "A48"),
+            "raw": None,
+            "url": None,
+            "candidates": [],
+            "apiStatus": "SECRET_MISSING",
+            "apiMessage": "KMA_AUTH_KEY secret is missing.",
+            "attempts": []
+        }
 
     current_time = now_kst()
 
@@ -190,7 +214,16 @@ def get_heat_index(config):
                 "authKey": KMA_AUTH_KEY
             }
 
-            data, raw, full_url = http_get_json(BASE_SENSIBLE_TEMP_URL, params)
+            data, raw, full_url, error = http_get_json(BASE_SENSIBLE_TEMP_URL, params)
+
+            if error:
+                attempts.append({
+                    "time": kma_time,
+                    "requestCode": request_code,
+                    "status": "HTTP_ERROR",
+                    "message": error
+                })
+                continue
 
             if data is None:
                 attempts.append({
@@ -236,6 +269,15 @@ def get_heat_index(config):
                 "sample": json.dumps(data, ensure_ascii=False)[:500]
             })
 
+    has_http_error = any(item.get("status") == "HTTP_ERROR" for item in attempts)
+
+    if has_http_error:
+        api_status = "TIMEOUT_OR_HTTP_ERROR"
+        api_message = "기상청 API 호출 중 타임아웃 또는 HTTP 오류 발생"
+    else:
+        api_status = "NO_DATA"
+        api_message = "최근 24시간 내 체감온도 데이터 없음"
+
     return {
         "apparentTemperature": None,
         "kmaTime": format_kma_time(current_time),
@@ -243,8 +285,8 @@ def get_heat_index(config):
         "raw": None,
         "url": None,
         "candidates": [],
-        "apiStatus": "NO_DATA",
-        "apiMessage": "최근 24시간 내 체감온도 데이터 없음",
+        "apiStatus": api_status,
+        "apiMessage": api_message,
         "attempts": attempts
     }
 
@@ -441,23 +483,62 @@ def send_teams_message(title, text):
 
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
 
-    req = urllib.request.Request(
-        TEAMS_WEBHOOK_URL,
-        data=data,
-        headers={
-            "Content-Type": "application/json"
-        },
-        method="POST"
-    )
+    last_error = None
 
-    with urllib.request.urlopen(req, timeout=30) as response:
-        status = response.status
-        body = response.read().decode("utf-8", errors="replace")
+    for attempt in range(1, 4):
+        try:
+            req = urllib.request.Request(
+                TEAMS_WEBHOOK_URL,
+                data=data,
+                headers={
+                    "Content-Type": "application/json"
+                },
+                method="POST"
+            )
 
-    print(f"Teams response status: {status}")
-    print(f"Teams response body: {body[:300]}")
+            with urllib.request.urlopen(req, timeout=60) as response:
+                status = response.status
+                body = response.read().decode("utf-8", errors="replace")
 
-    return 200 <= status < 300
+            print(f"Teams response status: {status}")
+            print(f"Teams response body: {body[:300]}")
+
+            return 200 <= status < 300
+
+        except Exception as e:
+            last_error = str(e)
+            print(f"[WARN] Teams webhook failed. attempt={attempt}/3 error={last_error}")
+
+            if attempt < 3:
+                time.sleep(3 * attempt)
+
+    print(f"[WARN] Teams notification failed after retries: {last_error}")
+    return False
+
+
+def should_notify(previous_level, current_level):
+    """
+    Teams 알림 정책
+
+    1. 데이터없음이면 알림 안 보냄
+    2. 정상 유지이면 알림 안 보냄
+    3. 같은 단계 유지이면 알림 안 보냄
+    4. 단계가 바뀌면 알림 보냄
+       - 정상 → 주의
+       - 주의 → 경계
+       - 경계 → 위험
+       - 위험 → 경계
+       - 주의 → 정상
+       - 기타 단계 상승/하향 포함
+    """
+
+    if current_level == "데이터없음":
+        return False
+
+    if previous_level == current_level:
+        return False
+
+    return True
 
 
 def main():
@@ -473,10 +554,7 @@ def main():
     current_level = decide_level(apparent_temp)
     previous_level = last_state.get("level", "정상")
 
-    if current_level == "데이터없음":
-        level_changed = False
-    else:
-        level_changed = current_level != previous_level
+    notify = should_notify(previous_level, current_level)
 
     current = {
         "observedAt": observed_at,
@@ -490,7 +568,7 @@ def main():
         "windSpeed": None,
         "level": current_level,
         "previousLevel": previous_level,
-        "levelChanged": level_changed,
+        "levelChanged": notify,
         "teamsNotified": False,
         "apiStatus": heat.get("apiStatus", ""),
         "apiMessage": heat.get("apiMessage", ""),
@@ -504,12 +582,15 @@ def main():
             "apiMessage": heat.get("apiMessage"),
             "attemptsSample": heat.get("attempts", [])[:10]
         }, ensure_ascii=False, indent=2))
-    elif level_changed:
+        print("No Teams notification because current level is 데이터없음.")
+
+    elif notify:
         title, message = build_message(config, current, previous_level)
         notified = send_teams_message(title, message)
         current["teamsNotified"] = notified
+
     else:
-        print(f"No level change. Previous={previous_level}, Current={current_level}")
+        print(f"No notification. Previous={previous_level}, Current={current_level}")
 
     save_json(CURRENT_PATH, current)
     save_json(DASHBOARD_DATA_PATH, current)
@@ -520,6 +601,8 @@ def main():
             "apparentTemperature": apparent_temp,
             "observedAt": observed_at
         })
+    else:
+        print("last_state.json was not updated because current level is 데이터없음.")
 
     append_history({
         "observedAt": observed_at,
@@ -531,7 +614,7 @@ def main():
         "windSpeed": "",
         "level": current_level,
         "previousLevel": previous_level,
-        "levelChanged": "Y" if level_changed else "N",
+        "levelChanged": "Y" if notify else "N",
         "teamsNotified": "Y" if current["teamsNotified"] else "N",
         "apiStatus": current["apiStatus"],
         "apiMessage": current["apiMessage"]
@@ -546,4 +629,52 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         print(f"[ERROR] {e}", file=sys.stderr)
-        sys.exit(1)
+
+        try:
+            ensure_dirs()
+
+            error_status = {
+                "observedAt": now_kst().strftime("%Y-%m-%d %H:%M:%S"),
+                "siteName": "유니드 울산공장",
+                "address": "울산광역시 남구 상개로 142",
+                "areaNo": "3114064000",
+                "requestCode": "A48",
+                "apparentTemperature": None,
+                "temperature": None,
+                "humidity": None,
+                "windSpeed": None,
+                "level": "데이터없음",
+                "previousLevel": "알수없음",
+                "levelChanged": False,
+                "teamsNotified": False,
+                "apiStatus": "SCRIPT_ERROR",
+                "apiMessage": str(e),
+                "kmaTime": ""
+            }
+
+            save_json(CURRENT_PATH, error_status)
+            save_json(DASHBOARD_DATA_PATH, error_status)
+
+            append_history({
+                "observedAt": error_status["observedAt"],
+                "siteName": error_status["siteName"],
+                "address": error_status["address"],
+                "apparentTemperature": "",
+                "temperature": "",
+                "humidity": "",
+                "windSpeed": "",
+                "level": "데이터없음",
+                "previousLevel": "알수없음",
+                "levelChanged": "N",
+                "teamsNotified": "N",
+                "apiStatus": "SCRIPT_ERROR",
+                "apiMessage": str(e)
+            })
+
+            print("Script error was recorded to dashboard data.")
+            print(json.dumps(error_status, ensure_ascii=False, indent=2))
+
+        except Exception as inner_e:
+            print(f"[ERROR] Failed to write error status: {inner_e}", file=sys.stderr)
+
+        sys.exit(0)
