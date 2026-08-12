@@ -1,8 +1,10 @@
 {
   "level": "정상",
-  "apparentTemperature": -108.2,
-  "observedAt": "2026-08-12 14:49:07",
-  "temperature": -99.9,
-  "humidity": -99.9,
-  "windSpeed": -99.9
+  "apparentTemperature": 29.0,
+  "observedAt": "2026-08-12 16:35:42",
+  "temperature": 27.3,
+  "humidity": 66.3,
+  "windSpeed": 3.2,
+  "awsStation": "898",
+  "awsStationName": "장생포"
 }
