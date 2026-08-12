@@ -4,92 +4,513 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>유니드 울산공장 온열질환 모니터링</title>
-  ./style.css
+
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #667085;
+      --line: #e5e7eb;
+      --normal: #2e7d32;
+      --caution: #d9a400;
+      --warning: #ef7d00;
+      --danger: #d32f2f;
+      --extreme: #7f0000;
+      --shadow: 0 8px 22px rgba(16, 24, 40, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap {
+      width: min(1180px, calc(100% - 32px));
+      margin: 24px auto;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .title h1 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      letter-spacing: -0.04em;
+    }
+
+    .title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .badge {
+      min-width: 120px;
+      text-align: center;
+      padding: 14px 20px;
+      border-radius: 999px;
+      background: #dfe4ea;
+      font-size: 22px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 16px;
+      color: #344054;
+    }
+
+    .big-temp {
+      font-size: 64px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.05em;
+    }
+
+    .level-text {
+      font-size: 42px;
+      font-weight: 900;
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .mini {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .mini .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .mini .value {
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .section-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .criteria {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    .criteria li {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 14px;
+      background: #fafafa;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .row:last-child {
+      border-bottom: 0;
+    }
+
+    .row span {
+      color: var(--muted);
+    }
+
+    .row strong {
+      text-align: right;
+    }
+
+    .normal {
+      color: var(--normal);
+    }
+
+    .caution {
+      color: var(--caution);
+    }
+
+    .warning {
+      color: var(--warning);
+    }
+
+    .danger {
+      color: var(--danger);
+    }
+
+    .extreme {
+      color: var(--extreme);
+    }
+
+    .badge.normal {
+      background: #e8f5e9;
+      color: var(--normal);
+    }
+
+    .badge.caution {
+      background: #fff8db;
+      color: #9a7400;
+    }
+
+    .badge.warning {
+      background: #fff0df;
+      color: var(--warning);
+    }
+
+    .badge.danger {
+      background: #ffebee;
+      color: var(--danger);
+    }
+
+    .badge.extreme {
+      background: #2c0b0e;
+      color: #ffffff;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    .dot.normal {
+      background: var(--normal);
+    }
+
+    .dot.caution {
+      background: var(--caution);
+    }
+
+    .dot.warning {
+      background: var(--warning);
+    }
+
+    .dot.danger {
+      background: var(--danger);
+    }
+
+    .dot.extreme {
+      background: var(--extreme);
+    }
+
+    @media (max-width: 900px) {
+      .top {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .dashboard,
+      .info-grid,
+      .section-row,
+      .criteria {
+        grid-template-columns: 1fr;
+      }
+
+      .big-temp {
+        font-size: 48px;
+      }
+
+      .level-text {
+        font-size: 36px;
+      }
+    }
+  </style>
 </head>
 
 <body>
   <main class="wrap">
-    <section class="hero">
-      <div>
+    <section class="top">
+      <div class="title">
         <h1>유니드 울산공장 온열질환 모니터링</h1>
-        <p>체감온도 기준 위험단계를 자동 확인하고 Teams 알림과 대시보드를 갱신합니다.</p>
+        <p>체감온도 기준 위험단계를 자동 확인하고, 단계 변경 시 Teams 알림을 발송합니다.</p>
       </div>
 
       <div id="levelBadge" class="badge">확인 중</div>
     </section>
 
-    <section class="grid">
-      <article class="card main-card">
+    <section class="dashboard">
+      <article class="card">
         <h2>현재 체감온도</h2>
-        <div id="apparentTemperature" class="temp">-</div>
-        <p id="observedAt" class="muted">최근 조회: -</p>
+        <div id="apparentTemperature" class="big-temp">-</div>
+        <div id="observedAt" class="muted">최근 조회: -</div>
       </article>
 
       <article class="card">
         <h2>현재 단계</h2>
-        <div id="levelText" class="level">-</div>
-        <p id="levelChange" class="muted">단계변경: -</p>
+        <div id="levelText" class="level-text">-</div>
+        <div id="levelChange" class="muted">단계변경: -</div>
       </article>
 
       <article class="card">
         <h2>감시지역</h2>
-        <p id="siteName" class="strong">-</p>
-        <p id="address" class="muted">-</p>
-      </article>
-
-      <article class="card">
-        <h2>기상 관측값</h2>
-        <div class="weather-row">
+        <div class="row">
+          <span>지역</span>
+          <strong id="siteName">-</strong>
+        </div>
+        <div class="row">
+          <span>주소</span>
+          <strong id="address">-</strong>
+        </div>
+        <div class="row">
           <span>관측소</span>
           <strong id="awsStationName">-</strong>
         </div>
-        <div class="weather-row">
+        <div class="row">
           <span>관측시각</span>
           <strong id="awsObservedTime">-</strong>
-        </div>
-        <div class="weather-row">
-          <span>기온</span>
-          <strong id="temperature">-</strong>
-        </div>
-        <div class="weather-row">
-          <span>습도</span>
-          <strong id="humidity">-</strong>
-        </div>
-        <div class="weather-row">
-          <span>풍속</span>
-          <strong id="windSpeed">-</strong>
         </div>
       </article>
     </section>
 
-    <section class="card">
-      <h2>단계 기준</h2>
-      <ul class="criteria">
-        <li><span class="dot normal"></span>정상: 31℃ 미만</li>
-        <li><span class="dot caution"></span>주의: 31℃ 이상</li>
-        <li><span class="dot warning"></span>경계: 33℃ 이상</li>
-        <li><span class="dot danger"></span>위험: 35℃ 이상</li>
-        <li><span class="dot extreme"></span>매우위험: 38℃ 이상</li>
-      </ul>
+    <section class="info-grid">
+      <article class="mini">
+        <div class="label">기온</div>
+        <div id="temperature" class="value">-</div>
+      </article>
+
+      <article class="mini">
+        <div class="label">습도</div>
+        <div id="humidity" class="value">-</div>
+      </article>
+
+      <article class="mini">
+        <div class="label">풍속</div>
+        <div id="windSpeed" class="value">-</div>
+      </article>
+
+      <article class="mini">
+        <div class="label">API 상태</div>
+        <div id="apiStatus" class="value">-</div>
+      </article>
     </section>
 
-    <section class="card">
-      <h2>시스템 상태</h2>
-      <div class="weather-row">
-        <span>API 상태</span>
-        <strong id="apiStatus">-</strong>
-      </div>
-      <div class="weather-row">
-        <span>API 메시지</span>
-        <strong id="apiMessage">-</strong>
-      </div>
-      <div class="weather-row">
-        <span>Teams 알림</span>
-        <strong id="teamsNotified">-</strong>
-      </div>
+    <section class="section-row">
+      <article class="card">
+        <h2>단계 기준</h2>
+        <ul class="criteria">
+          <li><span class="dot normal"></span>정상<br>31℃ 미만</li>
+          <li><span class="dot caution"></span>주의<br>31℃ 이상</li>
+          <li><span class="dot warning"></span>경계<br>33℃ 이상</li>
+          <li><span class="dot danger"></span>위험<br>35℃ 이상</li>
+          <li><span class="dot extreme"></span>매우위험<br>38℃ 이상</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <h2>시스템 상태</h2>
+        <div class="row">
+          <span>API 메시지</span>
+          <strong id="apiMessage">-</strong>
+        </div>
+        <div class="row">
+          <span>Teams 알림</span>
+          <strong id="teamsNotified">-</strong>
+        </div>
+      </article>
     </section>
   </main>
 
-  ./dashboard.jsscript>
+  <script>
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = value;
+      }
+    }
+
+    function formatNumber(value, digits = 1) {
+      if (value === null || value === undefined || value === "") {
+        return "-";
+      }
+
+      const number = Number(value);
+
+      if (Number.isNaN(number)) {
+        return "-";
+      }
+
+      return number.toFixed(digits);
+    }
+
+    function levelClass(level) {
+      if (level === "정상") return "normal";
+      if (level === "주의") return "caution";
+      if (level === "경계") return "warning";
+      if (level === "위험") return "danger";
+      if (level === "매우위험") return "extreme";
+      return "";
+    }
+
+    function formatObservedTime(value) {
+      if (!value) return "-";
+
+      const text = String(value);
+
+      if (text.length === 12) {
+        return (
+          text.slice(0, 4) + "-" +
+          text.slice(4, 6) + "-" +
+          text.slice(6, 8) + " " +
+          text.slice(8, 10) + ":" +
+          text.slice(10, 12)
+        );
+      }
+
+      return text;
+    }
+
+    async function loadDashboard() {
+      try {
+        const response = await fetch("./current.json?ts=" + Date.now());
+
+        if (!response.ok) {
+          throw new Error("current.json not found");
+        }
+
+        const data = await response.json();
+
+        const level = data.level || "-";
+        const badgeClass = levelClass(level);
+
+        setText("siteName", data.siteName || "-");
+        setText("address", data.address || "-");
+
+        setText(
+          "observedAt",
+          "최근 조회: " + (data.observedAt || "-")
+        );
+
+        setText(
+          "apparentTemperature",
+          data.apparentTemperature !== null && data.apparentTemperature !== undefined
+            ? formatNumber(data.apparentTemperature, 1) + "℃"
+            : "-"
+        );
+
+        setText("levelText", level);
+
+        setText(
+          "levelChange",
+          "단계변경: " +
+          (data.previousLevel || "-") +
+          " → " +
+          (data.level || "-")
+        );
+
+        setText(
+          "temperature",
+          data.temperature !== null && data.temperature !== undefined
+            ? formatNumber(data.temperature, 1) + "℃"
+            : "-"
+        );
+
+        setText(
+          "humidity",
+          data.humidity !== null && data.humidity !== undefined
+            ? formatNumber(data.humidity, 1) + "%"
+            : "-"
+        );
+
+        setText(
+          "windSpeed",
+          data.windSpeed !== null && data.windSpeed !== undefined
+            ? formatNumber(data.windSpeed, 1) + " m/s"
+            : "-"
+        );
+
+        setText(
+          "awsStationName",
+          data.awsStationName
+            ? data.awsStationName + " (" + (data.awsStation || "-") + ")"
+            : (data.awsStation || "-")
+        );
+
+        setText(
+          "awsObservedTime",
+          formatObservedTime(data.awsObservedTime)
+        );
+
+        setText("apiStatus", data.apiStatus || "-");
+        setText("apiMessage", data.apiMessage || "-");
+        setText("teamsNotified", data.teamsNotified ? "발송" : "미발송");
+
+        const badge = document.getElementById("levelBadge");
+        if (badge) {
+          badge.textContent = level;
+          badge.className = "badge " + badgeClass;
+        }
+
+        const levelText = document.getElementById("levelText");
+        if (levelText) {
+          levelText.className = "level-text " + badgeClass;
+        }
+      } catch (err) {
+        console.error(err);
+
+        setText("observedAt", "데이터를 불러오지 못했습니다.");
+        setText("apiStatus", "LOAD_ERROR");
+        setText("apiMessage", String(err));
+      }
+    }
+
+    loadDashboard();
+  </script>
 </body>
 </html>
