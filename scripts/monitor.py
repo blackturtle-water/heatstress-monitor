@@ -144,7 +144,8 @@ def parse_aws_text(text, station):
             candidate = line.lstrip("#").strip()
             tokens = candidate.split()
 
-            if "TA" in tokens and "HM" in tokens:
+            # AWS 자료 헤더로 보이는 줄 저장
+            if "TA" in tokens or "HM" in tokens or "WS" in tokens:
                 header_tokens = tokens
 
             continue
@@ -177,27 +178,48 @@ def parse_aws_text(text, station):
     humidity = None
     wind_speed = None
 
+    # 1차: 헤더 기준 파싱
     if header_tokens:
-        def get_by_key(key):
-            if key not in header_tokens:
-                return None
+        def get_by_key(*keys):
+            for key in keys:
+                if key in header_tokens:
+                    idx = header_tokens.index(key)
 
-            idx = header_tokens.index(key)
+                    if idx < len(latest):
+                        return to_float(latest[idx])
 
-            if idx >= len(latest):
-                return None
+            return None
 
-            return to_float(latest[idx])
+        temperature = get_by_key("TA", "TEMP", "T")
+        humidity = get_by_key("HM", "RH", "HUMIDITY")
+        wind_speed = get_by_key("WS", "WSPD", "WIND", "WIND_SPEED")
 
-        temperature = get_by_key("TA")
-        humidity = get_by_key("HM")
-        wind_speed = get_by_key("WS")
+    # 2차: 일반적인 AWS 매분자료 컬럼 위치 기준 보정
+    #
+    # 일반적인 AWS 매분자료 컬럼 추정:
+    # 0 TM
+    # 1 STN
+    # 2 WD
+    # 3 WS
+    # 4 GST_WD
+    # 5 GST_WS
+    # 6 GST_TM
+    # 7 PA
+    # 8 PS
+    # 9 PT
+    # 10 PR
+    # 11 TA
+    # 12 TD
+    # 13 HM
+    if len(latest) > 13:
+        if wind_speed is None:
+            wind_speed = to_float(latest[3])
 
-    if temperature is None or humidity is None:
-        if len(latest) > 13:
-            wind_speed = wind_speed if wind_speed is not None else to_float(latest[3])
-            temperature = temperature if temperature is not None else to_float(latest[11])
-            humidity = humidity if humidity is not None else to_float(latest[13])
+        if temperature is None:
+            temperature = to_float(latest[11])
+
+        if humidity is None:
+            humidity = to_float(latest[13])
 
     if temperature is None or humidity is None:
         return None, f"FAILED_TO_PARSE_VALUES: row={' '.join(latest)}"
@@ -209,7 +231,6 @@ def parse_aws_text(text, station):
         "windSpeed": wind_speed,
         "rawRow": latest
     }, None
-
 
 def get_aws_weather(config):
     if not KMA_AUTH_KEY:
