@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>유니드 울산공장 온열질환 모니터링</title>
   ./style.css
 </head>
@@ -19,7 +19,7 @@
     </section>
 
     <section class="grid">
-      <article class="card main">
+      <article class="card main-card">
         <h2>현재 체감온도</h2>
         <div id="apparentTemperature" class="temp">-</div>
         <p id="observedAt" class="muted">최근 조회: -</p>
@@ -33,37 +33,60 @@
 
       <article class="card">
         <h2>감시지역</h2>
-        <p id="siteName">-</p>
+        <p id="siteName" class="strong">-</p>
         <p id="address" class="muted">-</p>
       </article>
 
       <article class="card">
         <h2>기상 관측값</h2>
-        <p>관측소: <span id="awsStationName">-</span></p>
-        <p>관측시각: <span id="awsObservedTime">-</span></p>
-        <p>기온: <span id="temperature">-</span></p>
-        <p>습도: <span id="humidity">-</span></p>
-        <p>풍속: <span id="windSpeed">-</span></p>
+        <div class="weather-row">
+          <span>관측소</span>
+          <strong id="awsStationName">-</strong>
+        </div>
+        <div class="weather-row">
+          <span>관측시각</span>
+          <strong id="awsObservedTime">-</strong>
+        </div>
+        <div class="weather-row">
+          <span>기온</span>
+          <strong id="temperature">-</strong>
+        </div>
+        <div class="weather-row">
+          <span>습도</span>
+          <strong id="humidity">-</strong>
+        </div>
+        <div class="weather-row">
+          <span>풍속</span>
+          <strong id="windSpeed">-</strong>
+        </div>
       </article>
     </section>
 
     <section class="card">
       <h2>단계 기준</h2>
-
       <ul class="criteria">
-        <li><span class="dot normal"></span> 정상: 31℃ 미만</li>
-        <li><span class="dot caution"></span> 주의: 31℃ 이상</li>
-        <li><span class="dot warning"></span> 경계: 33℃ 이상</li>
-        <li><span class="dot danger"></span> 위험: 35℃ 이상</li>
-        <li><span class="dot extreme"></span> 매우위험: 38℃ 이상</li>
+        <li><span class="dot normal"></span>정상: 31℃ 미만</li>
+        <li><span class="dot caution"></span>주의: 31℃ 이상</li>
+        <li><span class="dot warning"></span>경계: 33℃ 이상</li>
+        <li><span class="dot danger"></span>위험: 35℃ 이상</li>
+        <li><span class="dot extreme"></span>매우위험: 38℃ 이상</li>
       </ul>
     </section>
 
     <section class="card">
       <h2>시스템 상태</h2>
-      <p>API 상태: <span id="apiStatus">-</span></p>
-      <p>API 메시지: <span id="apiMessage">-</span></p>
-      <p>Teams 알림 발송: <span id="teamsNotified">-</span></p>
+      <div class="weather-row">
+        <span>API 상태</span>
+        <strong id="apiStatus">-</strong>
+      </div>
+      <div class="weather-row">
+        <span>API 메시지</span>
+        <strong id="apiMessage">-</strong>
+      </div>
+      <div class="weather-row">
+        <span>Teams 알림</span>
+        <strong id="teamsNotified">-</strong>
+      </div>
     </section>
   </main>
 
