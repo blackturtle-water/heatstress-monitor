@@ -24,11 +24,7 @@ DASHBOARD_DATA_PATH = DOCS_DIR / "current.json"
 KMA_AUTH_KEY = os.environ.get("KMA_AUTH_KEY")
 TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK_URL")
 
-# 기상청 API Hub에서 발행된 AWS 매분자료 URL
-AWS_URL_CANDIDATES = [
-    "https://apihub.kma.go.kr/api/typ01/cgi-bin/url/nph-aws2_min",
-    "https://apihub.kma.go.kr/api/typ01/url/nph-aws2_min.php",
-]
+AWS_URL = "https://apihub.kma.go.kr/api/typ01/cgi-bin/url/nph-aws2_min"
 
 
 def ensure_dirs():
@@ -59,11 +55,22 @@ def load_config():
     if not isinstance(config, dict):
         raise RuntimeError("config/sites.json is not valid JSON object.")
 
-    required_keys = ["siteName", "address", "awsStation"]
+    required_keys = ["siteName", "address"]
     missing = [key for key in required_keys if key not in config]
 
     if missing:
         raise RuntimeError(f"config/sites.json missing keys: {missing}")
+
+    if "awsStations" not in config:
+        if "awsStation" in config:
+            config["awsStations"] = [
+                {
+                    "id": str(config["awsStation"]),
+                    "name": str(config["awsStation"])
+                }
+            ]
+        else:
+            raise RuntimeError("config/sites.json requires awsStations or awsStation.")
 
     return config
 
@@ -88,7 +95,6 @@ def http_get_text(url, params):
             }
         )
 
-        # 너무 오래 걸리지 않도록 6초만 대기
         with urllib.request.urlopen(req, timeout=6) as response:
             raw_bytes = response.read()
 
@@ -136,14 +142,14 @@ def to_float(value):
     except ValueError:
         return None
 
-    # AWS 결측값 방어
-    if number <= -90:
+    # AWS 설명에서 -50 이하면 관측 없음 또는 오류값으로 표시된다고 되어 있음.
+    if number <= -50:
         return None
 
     return number
 
 
-def is_data_row(tokens, station):
+def is_data_row(tokens, station_id):
     if len(tokens) < 2:
         return False
 
@@ -153,10 +159,10 @@ def is_data_row(tokens, station):
     if len(tokens[0]) not in [10, 12]:
         return False
 
-    return tokens[1] == str(station)
+    return tokens[1] == str(station_id)
 
 
-def parse_aws_text(text, station):
+def parse_aws_text(text, station_id):
     if not text or not text.strip():
         return None, "EMPTY_RESPONSE"
 
@@ -175,18 +181,20 @@ def parse_aws_text(text, station):
             candidate = line.lstrip("#").strip()
             tokens = candidate.split()
 
-            if "TA" in tokens or "HM" in tokens or "WS" in tokens:
+            # 실제 컬럼 헤더 예:
+            # YYMMDDHHMI STN WD1 WS1 WDS WSS WD10 WS10 TA RE ... HM PA PS TD
+            if "YYMMDDHHMI" in tokens and "STN" in tokens and "TA" in tokens and "HM" in tokens:
                 header_tokens = tokens
 
             continue
 
         tokens = line.split()
 
-        if is_data_row(tokens, station):
+        if is_data_row(tokens, station_id):
             data_rows.append(tokens)
 
     if not data_rows:
-        sample = text[:1500].replace("\n", " ")
+        sample = text[:1200].replace("\n", " ")
         return None, f"NO_DATA_ROWS: {sample}"
 
     def parse_row(row):
@@ -196,7 +204,6 @@ def parse_aws_text(text, station):
         humidity = None
         wind_speed = None
 
-        # 1차: 헤더 기준 파싱
         if header_tokens:
             def get_by_key(*keys):
                 for key in keys:
@@ -206,35 +213,40 @@ def parse_aws_text(text, station):
                             return to_float(row[idx])
                 return None
 
-            temperature = get_by_key("TA", "TEMP", "T")
-            humidity = get_by_key("HM", "RH", "HUMIDITY")
-            wind_speed = get_by_key("WS", "WSPD", "WIND", "WIND_SPEED")
+            temperature = get_by_key("TA")
+            humidity = get_by_key("HM")
+            # 10분 평균 풍속 우선, 없으면 1분 평균 풍속
+            wind_speed = get_by_key("WS10", "WS1")
 
-        # 2차: 일반적인 AWS 매분자료 컬럼 위치 기준 보정
+        # fallback: 실제 AWS 매분자료 컬럼 기준
         #
-        # 0 TM
+        # 0 YYMMDDHHMI
         # 1 STN
-        # 2 WD
-        # 3 WS
-        # 4 GST_WD
-        # 5 GST_WS
-        # 6 GST_TM
-        # 7 PA
-        # 8 PS
-        # 9 PT
-        # 10 PR
-        # 11 TA
-        # 12 TD
-        # 13 HM
-        if len(row) > 13:
+        # 2 WD1
+        # 3 WS1
+        # 4 WDS
+        # 5 WSS
+        # 6 WD10
+        # 7 WS10
+        # 8 TA
+        # 9 RE
+        # 10 RN-15m
+        # 11 RN-60m
+        # 12 RN-12H
+        # 13 RN-DAY
+        # 14 HM
+        # 15 PA
+        # 16 PS
+        # 17 TD
+        if len(row) > 14:
             if wind_speed is None:
-                wind_speed = to_float(row[3])
+                wind_speed = to_float(row[7]) or to_float(row[3])
 
             if temperature is None:
-                temperature = to_float(row[11])
+                temperature = to_float(row[8])
 
             if humidity is None:
-                humidity = to_float(row[13])
+                humidity = to_float(row[14])
 
         if temperature is None or humidity is None:
             return None
@@ -247,15 +259,46 @@ def parse_aws_text(text, station):
             "rawRow": row
         }
 
-    # 최신값부터 과거 방향으로 유효값 찾기
+    # 최신 데이터부터 과거 방향으로 유효값 검색
     for row in reversed(data_rows):
         parsed = parse_row(row)
-
         if parsed:
             return parsed, None
 
     last_row = " ".join(data_rows[-1]) if data_rows else ""
     return None, f"NO_VALID_OBSERVATION_VALUES: last_row={last_row}"
+
+
+def get_station_list(config):
+    stations = []
+
+    for item in config.get("awsStations", []):
+        if isinstance(item, dict):
+            station_id = str(item.get("id", "")).strip()
+            station_name = str(item.get("name", station_id)).strip()
+
+            if station_id:
+                stations.append(
+                    {
+                        "id": station_id,
+                        "name": station_name or station_id
+                    }
+                )
+        else:
+            station_id = str(item).strip()
+
+            if station_id:
+                stations.append(
+                    {
+                        "id": station_id,
+                        "name": station_id
+                    }
+                )
+
+    if not stations:
+        raise RuntimeError("No AWS stations configured.")
+
+    return stations
 
 
 def get_aws_weather(config):
@@ -271,48 +314,53 @@ def get_aws_weather(config):
             "attempts": []
         }
 
-    station = str(config["awsStation"])
     current_time = now_kst()
+    stations = get_station_list(config)
 
     attempts = []
 
-    # tm2 단일 조회만 사용
-    # 최신 시각에는 -99.9 결측이 나올 수 있으므로 여러 시각을 짧게 확인
-    minutes_back_list = [5, 10, 15, 20, 30, 45, 60, 90, 120]
+    # 너무 오래 돌지 않게 4개 시각만 확인.
+    # 각 관측소별 최근 10, 20, 30, 60분 순서로 확인.
+    minutes_back_list = [10, 20, 30, 60]
 
-    for minutes_back in minutes_back_list:
-        target_time = current_time - timedelta(minutes=minutes_back)
-        tm2 = format_aws_time(target_time)
+    for station in stations:
+        station_id = station["id"]
+        station_name = station["name"]
 
-        params = {
-            "tm2": tm2,
-            "stn": station,
-            "disp": "0",
-            "help": "1",
-            "authKey": KMA_AUTH_KEY
-        }
+        for minutes_back in minutes_back_list:
+            target_time = current_time - timedelta(minutes=minutes_back)
+            tm2 = format_aws_time(target_time)
 
-        for aws_url in AWS_URL_CANDIDATES:
-            text, full_url, error = http_get_text(aws_url, params)
+            params = {
+                "tm2": tm2,
+                "stn": station_id,
+                "disp": "0",
+                "help": "1",
+                "authKey": KMA_AUTH_KEY
+            }
 
-            print(f"[DEBUG] AWS request tm2={tm2}, stn={station}")
-            print(f"[DEBUG] AWS URL without key: {aws_url}?tm2={tm2}&stn={station}&disp=0&help=1&authKey=***")
+            text, full_url, error = http_get_text(AWS_URL, params)
+
+            print(f"[DEBUG] AWS request station={station_name}({station_id}), tm2={tm2}")
+            print(f"[DEBUG] AWS URL without key: {AWS_URL}?tm2={tm2}&stn={station_id}&disp=0&help=1&authKey=***")
 
             if error:
                 attempts.append({
+                    "stationId": station_id,
+                    "stationName": station_name,
                     "tm2": tm2,
-                    "url": aws_url,
                     "status": "HTTP_ERROR",
                     "message": error
                 })
                 print(f"[WARN] AWS HTTP error: {error}")
                 continue
 
+            # 첫 1회 정도 원문 확인용. 로그가 너무 길어지지 않게 900자만 출력.
             print("[DEBUG] AWS response sample start")
-            print(text[:1500])
+            print(text[:900])
             print("[DEBUG] AWS response sample end")
 
-            parsed, parse_error = parse_aws_text(text, station)
+            parsed, parse_error = parse_aws_text(text, station_id)
 
             if parsed:
                 return {
@@ -323,12 +371,15 @@ def get_aws_weather(config):
                     "apiStatus": "OK",
                     "apiMessage": "",
                     "url": full_url,
-                    "rawRow": parsed["rawRow"]
+                    "rawRow": parsed["rawRow"],
+                    "stationId": station_id,
+                    "stationName": station_name
                 }
 
             attempts.append({
+                "stationId": station_id,
+                "stationName": station_name,
                 "tm2": tm2,
-                "url": aws_url,
                 "status": "PARSE_OR_NO_VALID_DATA",
                 "message": parse_error
             })
@@ -341,9 +392,11 @@ def get_aws_weather(config):
         "windSpeed": None,
         "observedTime": None,
         "apiStatus": "NO_DATA",
-        "apiMessage": "최근 AWS 관측자료 중 유효한 기온/습도 값을 찾지 못했습니다.",
+        "apiMessage": "모든 AWS 후보 관측소에서 유효한 기온/습도 값을 찾지 못했습니다.",
         "url": None,
-        "attempts": attempts[:20]
+        "attempts": attempts[:30],
+        "stationId": None,
+        "stationName": None
     }
 
 
@@ -361,7 +414,8 @@ def calculate_heat_index_celsius(temp_c, rh):
 
     temp_f = c_to_f(temp_c)
 
-    # NOAA/NWS simple formula for lower heat index range
+    # NOAA/NWS 단순 Heat Index 공식.
+    # 80°F 미만에서는 단순식 사용, 80°F 이상에서는 Rothfusz regression 사용.
     if temp_f < 80:
         simple_hi_f = 0.5 * (
             temp_f
@@ -372,7 +426,6 @@ def calculate_heat_index_celsius(temp_c, rh):
         hi_f = (simple_hi_f + temp_f) / 2
         return round(f_to_c(hi_f), 1)
 
-    # Rothfusz regression
     hi_f = (
         -42.379
         + 2.04901523 * temp_f
@@ -464,6 +517,7 @@ def append_history(row):
         "apiStatus",
         "apiMessage",
         "awsStation",
+        "awsStationName",
         "awsObservedTime"
     ]
 
@@ -544,13 +598,15 @@ def build_message(config, current, previous_level):
     humidity_text = "-" if humidity is None else f"{humidity:.0f}%"
     wind_text = "-" if wind_speed is None else f"{wind_speed:.1f} m/s"
 
+    station_text = current.get("awsStationName") or current.get("awsStation") or "-"
+
     text = f"""
 {title}
 
 📍 지역: {config["siteName"]}
 🏭 주소: {config["address"]}
 🕒 조회시각: {observed_at}
-📡 AWS 지점: {config["awsStation"]}
+📡 사용 관측지점: {station_text}
 
 🌡 체감온도: {temp_text}
 🌡 기온: {air_temp_text}
@@ -659,7 +715,8 @@ def main():
         "observedAt": observed_at,
         "siteName": config["siteName"],
         "address": config["address"],
-        "awsStation": config["awsStation"],
+        "awsStation": weather.get("stationId"),
+        "awsStationName": weather.get("stationName"),
         "awsObservedTime": weather.get("observedTime"),
         "apparentTemperature": apparent_temp,
         "temperature": temperature,
@@ -700,7 +757,9 @@ def main():
             "observedAt": observed_at,
             "temperature": temperature,
             "humidity": humidity,
-            "windSpeed": wind_speed
+            "windSpeed": wind_speed,
+            "awsStation": weather.get("stationId"),
+            "awsStationName": weather.get("stationName")
         })
     else:
         print("last_state.json was not updated because current level is 데이터없음.")
@@ -719,7 +778,8 @@ def main():
         "teamsNotified": "Y" if current["teamsNotified"] else "N",
         "apiStatus": current["apiStatus"],
         "apiMessage": current["apiMessage"],
-        "awsStation": config["awsStation"],
+        "awsStation": weather.get("stationId") or "",
+        "awsStationName": weather.get("stationName") or "",
         "awsObservedTime": weather.get("observedTime") or ""
     })
 
@@ -740,7 +800,8 @@ if __name__ == "__main__":
                 "observedAt": now_kst().strftime("%Y-%m-%d %H:%M:%S"),
                 "siteName": "유니드 울산공장",
                 "address": "울산광역시 남구 상개로 142",
-                "awsStation": "954",
+                "awsStation": None,
+                "awsStationName": None,
                 "awsObservedTime": None,
                 "apparentTemperature": None,
                 "temperature": None,
@@ -771,7 +832,8 @@ if __name__ == "__main__":
                 "teamsNotified": "N",
                 "apiStatus": "SCRIPT_ERROR",
                 "apiMessage": str(e),
-                "awsStation": "954",
+                "awsStation": "",
+                "awsStationName": "",
                 "awsObservedTime": ""
             })
 
