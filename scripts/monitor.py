@@ -107,14 +107,35 @@ def to_float(value):
 
     text = str(value).strip()
 
-    if text in ["", "-9", "-99", "-999", "-9999", "-"]:
+    missing_values = [
+        "",
+        "-",
+        "-9",
+        "-9.0",
+        "-99",
+        "-99.0",
+        "-99.9",
+        "-999",
+        "-999.0",
+        "-999.9",
+        "-9999",
+        "-9999.0",
+        "-9999.9"
+    ]
+
+    if text in missing_values:
         return None
 
     try:
-        return float(text)
+        number = float(text)
     except ValueError:
         return None
 
+    # AWS 결측값 방어
+    if number <= -90:
+        return None
+
+    return number
 
 def is_data_row(tokens, station):
     if len(tokens) < 2:
@@ -162,66 +183,74 @@ def parse_aws_text(text, station):
         sample = text[:2000].replace("\n", " ")
         return None, f"NO_DATA_ROWS: {sample}"
 
-    latest = data_rows[-1]
+    def parse_row(row):
+        observed_time = row[0]
 
-    observed_time = latest[0]
+        temperature = None
+        humidity = None
+        wind_speed = None
 
-    temperature = None
-    humidity = None
-    wind_speed = None
+        if header_tokens:
+            def get_by_key(*keys):
+                for key in keys:
+                    if key in header_tokens:
+                        idx = header_tokens.index(key)
 
-    if header_tokens:
-        def get_by_key(*keys):
-            for key in keys:
-                if key in header_tokens:
-                    idx = header_tokens.index(key)
+                        if idx < len(row):
+                            return to_float(row[idx])
 
-                    if idx < len(latest):
-                        return to_float(latest[idx])
+                return None
 
+            temperature = get_by_key("TA", "TEMP", "T")
+            humidity = get_by_key("HM", "RH", "HUMIDITY")
+            wind_speed = get_by_key("WS", "WSPD", "WIND", "WIND_SPEED")
+
+        # fallback: 일반적인 AWS 매분자료 컬럼 추정
+        #
+        # 0 TM
+        # 1 STN
+        # 2 WD
+        # 3 WS
+        # 4 GST_WD
+        # 5 GST_WS
+        # 6 GST_TM
+        # 7 PA
+        # 8 PS
+        # 9 PT
+        # 10 PR
+        # 11 TA
+        # 12 TD
+        # 13 HM
+        if len(row) > 13:
+            if wind_speed is None:
+                wind_speed = to_float(row[3])
+
+            if temperature is None:
+                temperature = to_float(row[11])
+
+            if humidity is None:
+                humidity = to_float(row[13])
+
+        if temperature is None or humidity is None:
             return None
 
-        temperature = get_by_key("TA", "TEMP", "T")
-        humidity = get_by_key("HM", "RH", "HUMIDITY")
-        wind_speed = get_by_key("WS", "WSPD", "WIND", "WIND_SPEED")
+        return {
+            "observedTime": observed_time,
+            "temperature": temperature,
+            "humidity": humidity,
+            "windSpeed": wind_speed,
+            "rawRow": row
+        }
 
-    # fallback: 일반적인 AWS 매분자료 컬럼 추정
-    #
-    # 0 TM
-    # 1 STN
-    # 2 WD
-    # 3 WS
-    # 4 GST_WD
-    # 5 GST_WS
-    # 6 GST_TM
-    # 7 PA
-    # 8 PS
-    # 9 PT
-    # 10 PR
-    # 11 TA
-    # 12 TD
-    # 13 HM
-    if len(latest) > 13:
-        if wind_speed is None:
-            wind_speed = to_float(latest[3])
+    # 최신값부터 과거 방향으로 보면서 유효한 관측값 찾기
+    for row in reversed(data_rows):
+        parsed = parse_row(row)
 
-        if temperature is None:
-            temperature = to_float(latest[11])
+        if parsed:
+            return parsed, None
 
-        if humidity is None:
-            humidity = to_float(latest[13])
-
-    if temperature is None or humidity is None:
-        return None, f"FAILED_TO_PARSE_VALUES: row={' '.join(latest)}"
-
-    return {
-        "observedTime": observed_time,
-        "temperature": temperature,
-        "humidity": humidity,
-        "windSpeed": wind_speed,
-        "rawRow": latest
-    }, None
-
+    last_row = " ".join(data_rows[-1]) if data_rows else ""
+    return None, f"NO_VALID_OBSERVATION_VALUES: last_row={last_row}"
 
 def get_aws_weather(config):
     if not KMA_AUTH_KEY:
