@@ -94,9 +94,7 @@ def http_get_text(url, params):
     try:
         req = urllib.request.Request(
             full_url,
-            headers={
-                "User-Agent": "heatstress-monitor/1.0"
-            }
+            headers={"User-Agent": "heatstress-monitor/1.0"}
         )
 
         with urllib.request.urlopen(req, timeout=6) as response:
@@ -195,7 +193,7 @@ def parse_aws_text(text, station_id):
             data_rows.append(tokens)
 
     if not data_rows:
-        sample = text[:1200].replace("\n", " ")
+        sample = text[:800].replace("\n", " ")
         return None, f"NO_DATA_ROWS: {sample}"
 
     def parse_row(row):
@@ -218,25 +216,6 @@ def parse_aws_text(text, station_id):
             humidity = get_by_key("HM")
             wind_speed = get_by_key("WS10", "WS1")
 
-        # 실제 AWS 매분자료 컬럼 기준
-        # 0 YYMMDDHHMI
-        # 1 STN
-        # 2 WD1
-        # 3 WS1
-        # 4 WDS
-        # 5 WSS
-        # 6 WD10
-        # 7 WS10
-        # 8 TA
-        # 9 RE
-        # 10 RN-15m
-        # 11 RN-60m
-        # 12 RN-12H
-        # 13 RN-DAY
-        # 14 HM
-        # 15 PA
-        # 16 PS
-        # 17 TD
         if len(row) > 14:
             if wind_speed is None:
                 wind_speed = to_float(row[7]) or to_float(row[3])
@@ -316,7 +295,6 @@ def get_aws_weather(config):
 
     current_time = now_kst()
     stations = get_station_list(config)
-
     attempts = []
 
     minutes_back_list = [10, 20, 30, 60]
@@ -340,7 +318,6 @@ def get_aws_weather(config):
             text, full_url, error = http_get_text(AWS_URL, params)
 
             print(f"[DEBUG] AWS request station={station_name}({station_id}), tm2={tm2}")
-            print(f"[DEBUG] AWS URL without key: {AWS_URL}?tm2={tm2}&stn={station_id}&disp=0&help=1&authKey=***")
 
             if error:
                 attempts.append({
@@ -352,10 +329,6 @@ def get_aws_weather(config):
                 })
                 print(f"[WARN] AWS HTTP error: {error}")
                 continue
-
-            print("[DEBUG] AWS response sample start")
-            print(text[:700])
-            print("[DEBUG] AWS response sample end")
 
             parsed, parse_error = parse_aws_text(text, station_id)
 
@@ -478,4 +451,64 @@ def load_last_state():
         "observedAt": None,
         "temperature": None,
         "humidity": None,
-        "
+        "windSpeed": None,
+        "awsStation": None,
+        "awsStationName": None,
+        "awsObservedTime": None,
+        "regularReports": {}
+    }
+
+    state = safe_load_json(LAST_STATE_PATH, default_state)
+
+    if not isinstance(state, dict):
+        return default_state
+
+    if "level" not in state:
+        state["level"] = "정상"
+
+    if "regularReports" not in state or not isinstance(state["regularReports"], dict):
+        state["regularReports"] = {}
+
+    return state
+
+
+def load_current_state():
+    return safe_load_json(CURRENT_PATH, {})
+
+
+def is_valid_cached_state(state):
+    if not isinstance(state, dict):
+        return False
+
+    if state.get("apparentTemperature") is None:
+        return False
+
+    if state.get("temperature") is None:
+        return False
+
+    if state.get("humidity") is None:
+        return False
+
+    if state.get("level") in [None, "", "데이터없음"]:
+        return False
+
+    return True
+
+
+def get_last_valid_state(last_state):
+    if is_valid_cached_state(last_state):
+        return last_state
+
+    current_state = load_current_state()
+
+    if is_valid_cached_state(current_state):
+        return current_state
+
+    return None
+
+
+def save_json(path, obj):
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(obj, f, ensure_ascii=False, indent=2)
+
+
