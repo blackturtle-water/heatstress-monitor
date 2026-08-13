@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.3.3"
+VERSION = "v1.3.4"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -297,9 +297,9 @@ def send_teams(current, reason):
     if not TEAMS_WEBHOOK_URL:
         return False
     reason_text = {"regular_08": "08:00 정기보고", "regular_13": "13:00 정기보고", "level_change": "단계변경"}.get(reason, "알림")
-    forecast_text = "예보 미제공"
+    forecast_text = "오늘 예보 최고: 예보 미제공"
     if current.get("forecastMaxApparentTemperature") is not None:
-        forecast_text = f"오늘 예상 최고 {current['forecastMaxApparentTemperature']:.1f}℃ / {current.get('forecastMaxLevel')} / {current.get('forecastMaxTime')}"
+        forecast_text = f"오늘 예보 최고 {current['forecastMaxApparentTemperature']:.1f}℃ / {current.get('forecastMaxLevel')} / {current.get('forecastMaxTime')}"
     lines = [
         f"{reason_text} | {current['level']} | 체감온도 {current['apparentTemperature']:.1f}℃", "",
         f"현재 단계: {current['level']}", f"현재 체감온도: {current['apparentTemperature']:.1f}℃",
