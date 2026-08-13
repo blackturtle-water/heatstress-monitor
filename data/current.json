@@ -1,42 +1,21 @@
 {
-  "observedAt": "2026-08-14 05:47:24",
+  "observedAt": "2026-08-14 06:50:07",
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202608140400",
+  "awsObservedTime": "202608140640",
   "apparentTemperature": 25.8,
   "temperature": 25.4,
-  "humidity": 86.9,
-  "windSpeed": 0.4,
+  "humidity": 85.8,
+  "windSpeed": 1.8,
   "level": "정상",
   "previousLevel": "정상",
-  "apiStatus": "STALE_DATA",
-  "apiMessage": "HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>",
+  "apiStatus": "OK",
+  "apiMessage": "",
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "0300",
-      "temperature": 24.0,
-      "humidity": 90.0,
-      "apparentTemperature": 24.4,
-      "level": "정상"
-    },
-    {
-      "time": "0400",
-      "temperature": 24.0,
-      "humidity": 90.0,
-      "apparentTemperature": 24.4,
-      "level": "정상"
-    },
-    {
-      "time": "0500",
-      "temperature": 23.0,
-      "humidity": 90.0,
-      "apparentTemperature": 23.4,
-      "level": "정상"
-    },
     {
       "time": "0600",
       "temperature": 23.0,
@@ -170,12 +149,11 @@
   "forecastMaxTemperature": 32.0,
   "forecastMaxHumidity": 65.0,
   "forecastBaseDate": "20260814",
-  "forecastBaseTime": "0200",
+  "forecastBaseTime": "0500",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
   "levelChanged": false,
   "notificationReason": "none",
-  "teamsNotified": false,
-  "forecastSource": "CACHE"
+  "teamsNotified": false
 }
