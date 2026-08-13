@@ -1,5 +1,5 @@
 {
-  "observedAt": "2026-08-14 00:00:25",
+  "observedAt": "2026-08-14 01:01:33",
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
@@ -11,8 +11,8 @@
   "windSpeed": 0.2,
   "level": "정상",
   "previousLevel": "정상",
-  "apiStatus": "OK",
-  "apiMessage": "",
+  "apiStatus": "STALE_DATA",
+  "apiMessage": "HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>",
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
@@ -197,5 +197,6 @@
   "forecastGridName": "울산 남구",
   "levelChanged": false,
   "notificationReason": "none",
-  "teamsNotified": false
+  "teamsNotified": false,
+  "forecastSource": "CACHE"
 }
