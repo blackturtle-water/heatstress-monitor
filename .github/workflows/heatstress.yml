@@ -36,6 +36,16 @@ jobs:
           python -u scripts/monitor.py
           echo "=== Finished heat stress monitor ==="
 
+      - name: Copy dashboard history data
+        run: |
+          mkdir -p docs
+          if [ -f data/history.csv ]; then
+            cp data/history.csv docs/history.csv
+            echo "Copied data/history.csv to docs/history.csv"
+          else
+            echo "data/history.csv not found"
+          fi
+
       - name: Show current status file
         run: |
           echo "=== data/current.json ==="
