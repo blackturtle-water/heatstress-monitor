@@ -7,16 +7,9 @@
     { "id": "943", "name": "매곡" },
     { "id": "949", "name": "정자" }
   ],
-  "forecastRequestCode": "A48",
-  "forecastAreas": [
-    { "areaNo": "3111064000", "name": "중구 약사동" },
-    { "areaNo": "3100000000", "name": "울산광역시" }
-  ],
-  "thresholds": {
-    "normal": 31,
-    "caution": 31,
-    "warning": 33,
-    "danger": 35,
-    "extreme": 38
+  "forecastGrid": {
+    "nx": "102",
+    "ny": "83",
+    "name": "울산 남구"
   }
 }
