@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v0.7.0"
+VERSION = "v0.8.0"
 KST = timezone(timedelta(hours=9))
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -337,33 +337,52 @@ def direction_text(previous_level, current_level, reason):
 
 def build_message(config, current, previous_level, reason):
     level = current["level"]
-    title, actions = title_and_actions(level, reason)
+    base_title, actions = title_and_actions(level, reason)
     direction = direction_text(previous_level, level, reason)
+
     temp_text = "-" if current.get("apparentTemperature") is None else f"{current['apparentTemperature']:.1f}℃"
     air_text = "-" if current.get("temperature") is None else f"{current['temperature']:.1f}℃"
     hum_text = "-" if current.get("humidity") is None else f"{current['humidity']:.1f}%"
     wind_text = "-" if current.get("windSpeed") is None else f"{current['windSpeed']:.1f} m/s"
     station_text = current.get("awsStationName") or current.get("awsStation") or "-"
+
+    if reason == "regular_08":
+        prefix = "📋 08:00 정기보고"
+    elif reason == "regular_13":
+        prefix = "📋 13:00 정기보고"
+    elif reason == "level_change":
+        prefix = "🚨 온열질환 단계변경"
+    else:
+        prefix = "📌 온열질환 알림"
+
+    title = f"{prefix} | {level} | 체감온도 {temp_text}"
+
+    if level == "정상":
+        safety_title = "안내"
+    else:
+        safety_title = "필요 조치"
+
     lines = [
-        title,
+        f"{level} / 체감온도 {temp_text}",
         "",
-        f"📍 지역: {config['siteName']}",
-        f"🏭 주소: {config['address']}",
-        f"🕒 조회시각: {current['observedAt']}",
-        f"📡 사용 관측지점: {station_text}",
+        "핵심 현황",
+        f"- 현재 단계: {level}",
+        f"- 체감온도: {temp_text}",
+        f"- 기온: {air_text}",
+        f"- 습도: {hum_text}",
+        f"- 풍속: {wind_text}",
         "",
-        f"🌡 체감온도: {temp_text}",
-        f"🌡 기온: {air_text}",
-        f"💧 습도: {hum_text}",
-        f"🌬 풍속: {wind_text}",
+        f"변화: {direction} ({previous_level} → {level})",
+        f"관측: {station_text}",
+        f"조회: {current['observedAt']}",
         "",
-        f"📊 {direction}: {previous_level} → {level}",
-        "",
-        "✅ 권고조치",
+        safety_title,
     ]
+
     for item in actions:
         lines.append(f"- {item}")
-    lines.extend(["", "🔗 대시보드", DASHBOARD_URL])
+
+    lines.extend(["", "대시보드", DASHBOARD_URL])
     return title, "\n".join(lines)
 
 
