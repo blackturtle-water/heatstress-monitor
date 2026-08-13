@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.1.3"
+VERSION = "v1.1.4"
 KST = timezone(timedelta(hours=9))
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -222,14 +222,29 @@ def get_forecast_request_code(config):
 
 
 def forecast_time_candidates(dt):
-    # 생활기상지수 API는 발표시각을 요구한다. 현재시각부터 과거 방향으로 넓게 재시도한다.
+    # 생활기상지수 체감온도는 URL 발행 예시 기준 발표시각이 YYYYMMDDHH 형식이다.
+    # 화면 예시가 06시/18시 발표 체계이므로, 현재 시각 기준 최신 06/18 발표값부터 조회한다.
+    today = dt.strftime("%Y%m%d")
+    yesterday = (dt - timedelta(days=1)).strftime("%Y%m%d")
+    tomorrow = (dt + timedelta(days=1)).strftime("%Y%m%d")
+
     candidates = []
-    for hours_back in [0, 1, 2, 3, 6, 9, 12, 24]:
-        t = dt - timedelta(hours=hours_back)
-        candidates.append(t.strftime("%Y%m%d%H"))
-    # 일부 APIHub 화면은 0 입력 시 최신값으로 동작하는 경우가 있어 마지막 후보로 둔다.
+    if dt.hour >= 18:
+        candidates.extend([today + "18", today + "06", yesterday + "18", yesterday + "06"])
+    elif dt.hour >= 6:
+        candidates.extend([today + "06", yesterday + "18", yesterday + "06"])
+    else:
+        candidates.extend([yesterday + "18", yesterday + "06"])
+
+    # APIHub 화면에서 0은 최신값 조회로 동작할 수 있어 마지막 후보로 둔다.
     candidates.append("0")
-    return candidates
+
+    # 중복 제거
+    result = []
+    for item in candidates:
+        if item not in result:
+            result.append(item)
+    return result
 
 
 def request_json_or_xml(url, params):
