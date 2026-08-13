@@ -1,42 +1,21 @@
 {
-  "observedAt": "2026-08-13 19:10:47",
+  "observedAt": "2026-08-13 20:50:42",
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202608131730",
-  "apparentTemperature": 30.6,
-  "temperature": 27.8,
-  "humidity": 72.3,
-  "windSpeed": 2.1,
+  "awsObservedTime": "202608132040",
+  "apparentTemperature": 29.6,
+  "temperature": 27.0,
+  "humidity": 79.0,
+  "windSpeed": 1.2,
   "level": "정상",
   "previousLevel": "정상",
-  "apiStatus": "STALE_DATA",
-  "apiMessage": "HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>",
+  "apiStatus": "OK",
+  "apiMessage": "",
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "1800",
-      "temperature": 28.0,
-      "humidity": 75.0,
-      "apparentTemperature": 31.4,
-      "level": "주의"
-    },
-    {
-      "time": "1900",
-      "temperature": 26.0,
-      "humidity": 80.0,
-      "apparentTemperature": 26.4,
-      "level": "정상"
-    },
-    {
-      "time": "2000",
-      "temperature": 26.0,
-      "humidity": 80.0,
-      "apparentTemperature": 26.4,
-      "level": "정상"
-    },
     {
       "time": "2100",
       "temperature": 26.0,
@@ -59,18 +38,17 @@
       "level": "정상"
     }
   ],
-  "forecastMaxApparentTemperature": 31.4,
-  "forecastMaxTime": "1800",
-  "forecastMaxLevel": "주의",
-  "forecastMaxTemperature": 28.0,
-  "forecastMaxHumidity": 75.0,
+  "forecastMaxApparentTemperature": 26.4,
+  "forecastMaxTime": "2100",
+  "forecastMaxLevel": "정상",
+  "forecastMaxTemperature": 26.0,
+  "forecastMaxHumidity": 85.0,
   "forecastBaseDate": "20260813",
-  "forecastBaseTime": "1700",
+  "forecastBaseTime": "2000",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
   "levelChanged": false,
   "notificationReason": "none",
-  "teamsNotified": false,
-  "forecastSource": "CACHE"
+  "teamsNotified": false
 }
