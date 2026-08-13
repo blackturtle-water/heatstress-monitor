@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.3.2"
+VERSION = "v1.3.3"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -191,20 +191,45 @@ def latest_base_time(dt):
     return prev.strftime("%Y%m%d"), "2300"
 
 
+def cached_forecast_result(cached, status="OK"):
+    keys = [
+        "forecastItems", "forecastMaxApparentTemperature", "forecastMaxTime", "forecastMaxLevel",
+        "forecastMaxTemperature", "forecastMaxHumidity", "forecastBaseDate", "forecastBaseTime",
+        "forecastNx", "forecastNy", "forecastGridName"
+    ]
+    result = {"ok": True, "forecastStatus": status, "forecastMessage": ""}
+    for key in keys:
+        if key in cached:
+            result[key] = cached.get(key)
+    result["forecastSource"] = "CACHE"
+    return result
+
+
 def fetch_forecast(config):
     if not KMA_FORECAST_SERVICE_KEY:
+        cached = read_json(CURRENT_PATH, {})
+        if cached.get("forecastMaxApparentTemperature") is not None:
+            return cached_forecast_result(cached)
         return {"ok": False, "forecastStatus": "SECRET_MISSING", "forecastMessage": "KMA_FORECAST_SERVICE_KEY is missing"}
     grid = config.get("forecastGrid", {})
     nx, ny = str(grid.get("nx", "102")), str(grid.get("ny", "83"))
     grid_name = str(grid.get("name", "울산 남구"))
     base_date, base_time = latest_base_time(now_kst())
+
+    cached = read_json(CURRENT_PATH, {})
+    if (cached.get("forecastBaseDate") == base_date and cached.get("forecastBaseTime") == base_time
+            and cached.get("forecastMaxApparentTemperature") is not None):
+        return cached_forecast_result(cached)
+
     params = {
         "pageNo": "1", "numOfRows": "1000", "dataType": "JSON",
         "base_date": base_date, "base_time": base_time, "nx": nx, "ny": ny,
         "authKey": KMA_FORECAST_SERVICE_KEY,
     }
-    raw, _, error = request_bytes(FORECAST_URL, params, timeout=15)
+    raw, _, error = request_bytes(FORECAST_URL, params, timeout=10)
     if error:
+        if cached.get("forecastMaxApparentTemperature") is not None:
+            return cached_forecast_result(cached)
         return {"ok": False, "forecastStatus": "HTTP_ERROR", "forecastMessage": error, "forecastBaseDate": base_date, "forecastBaseTime": base_time, "forecastNx": nx, "forecastNy": ny}
     text = decode_bytes(raw)
     try:
