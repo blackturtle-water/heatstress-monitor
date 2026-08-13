@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.0.1"
+VERSION = "v1.1.0"
 KST = timezone(timedelta(hours=9))
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,7 +25,7 @@ KMA_FORECAST_SERVICE_KEY = os.environ.get("KMA_FORECAST_SERVICE_KEY") or KMA_AUT
 TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK_URL")
 DASHBOARD_URL = os.environ.get("DASHBOARD_URL", "https://blackturtle-water.github.io/heatstress-monitor/")
 AWS_URL = "https://apihub.kma.go.kr/api/typ01/cgi-bin/url/nph-aws2_min"
-FORECAST_URL = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
+FORECAST_URL = "https://apihub.kma.go.kr/openApi/LivingWthrIdxServiceV3/getSenTaIdxV3"
 
 
 def now_kst():
@@ -191,58 +191,172 @@ def fetch_weather(config):
 
 
 
-def get_forecast_grid(config):
-    grid = config.get("forecastGrid")
-    if isinstance(grid, dict):
-        nx = str(grid.get("nx", "")).strip()
-        ny = str(grid.get("ny", "")).strip()
-        if nx and ny:
-            return nx, ny
+def get_forecast_areas(config):
+    areas = []
+    for item in config.get("forecastAreas", []):
+        if isinstance(item, dict):
+            area_no = str(item.get("areaNo", "")).strip()
+            area_name = str(item.get("name", area_no)).strip()
+        else:
+            area_no = str(item).strip()
+            area_name = area_no
+        if area_no:
+            areas.append({"areaNo": area_no, "name": area_name or area_no})
 
-    nx = str(config.get("forecastNx", "")).strip()
-    ny = str(config.get("forecastNy", "")).strip()
-    if nx and ny:
-        return nx, ny
-
-    # Default candidate for Ulsan Nam-gu area. Override in config/sites.json if needed.
-    return "102", "83"
-
-
-def latest_forecast_base(dt):
-    # KMA village forecast base times are released at 02, 05, 08, 11, 14, 17, 20, 23 KST.
-    # Use a 10 minute delay after the base time to avoid empty responses immediately after release.
-    base_hours = [2, 5, 8, 11, 14, 17, 20, 23]
-    for hour in sorted(base_hours, reverse=True):
-        if dt.hour > hour or (dt.hour == hour and dt.minute >= 10):
-            return dt.strftime("%Y%m%d"), f"{hour:02d}00"
-
-    prev = dt - timedelta(days=1)
-    return prev.strftime("%Y%m%d"), "2300"
+    if not areas:
+        # Default fallback candidates near Ulsan Nam-gu industrial area.
+        areas = [
+            {"areaNo": "3114064000", "name": "선암동"},
+            {"areaNo": "3114067000", "name": "야음장생포동"},
+            {"areaNo": "3114062500", "name": "대현동"},
+            {"areaNo": "3114063500", "name": "수암동"},
+            {"areaNo": "3114057000", "name": "삼산동"}
+        ]
+    return areas
 
 
-def request_json(url, params):
+def get_forecast_request_code(config):
+    return str(config.get("forecastRequestCode", "A48")).strip() or "A48"
+
+
+def forecast_time_candidates(dt):
+    # 생활기상지수 API는 발표시각을 요구한다. 현재시각부터 과거 방향으로 넓게 재시도한다.
+    candidates = []
+    for hours_back in [0, 1, 2, 3, 6, 9, 12, 24]:
+        t = dt - timedelta(hours=hours_back)
+        candidates.append(t.strftime("%Y%m%d%H"))
+    # 일부 APIHub 화면은 0 입력 시 최신값으로 동작하는 경우가 있어 마지막 후보로 둔다.
+    candidates.append("0")
+    return candidates
+
+
+def request_json_or_xml(url, params):
     text, full_url, error = request_text(url, params)
     if error:
-        return None, full_url, error
+        return None, text, full_url, error
     try:
-        return json.loads(text), full_url, None
-    except Exception as exc:
-        return None, full_url, f"JSON_ERROR: {exc}"
+        return json.loads(text), text, full_url, None
+    except Exception:
+        return None, text, full_url, None
 
 
-def request_json_with_retry(url, params, retry_count=2):
-    last_data = None
-    last_url = None
-    last_error = None
-    for attempt in range(retry_count + 1):
-        data, full_url, error = request_json(url, params)
-        last_data = data
-        last_url = full_url
-        last_error = error
-        if not error:
-            return data, full_url, None
-        print(f"[WARN] Forecast API attempt {attempt + 1} failed: {error}", flush=True)
-    return last_data, last_url, last_error
+def flatten_json(obj, prefix=""):
+    rows = []
+    if isinstance(obj, dict):
+        rows.append(obj)
+        for value in obj.values():
+            rows.extend(flatten_json(value, prefix))
+    elif isinstance(obj, list):
+        for value in obj:
+            rows.extend(flatten_json(value, prefix))
+    return rows
+
+
+def parse_xml_simple_items(text):
+    try:
+        import xml.etree.ElementTree as ET
+        root = ET.fromstring(text)
+    except Exception:
+        return []
+    rows = []
+    for elem in root.iter():
+        children = list(elem)
+        if not children:
+            continue
+        row = {}
+        for child in children:
+            tag = child.tag.split("}")[-1]
+            row[tag] = (child.text or "").strip()
+        if row:
+            rows.append(row)
+    return rows
+
+
+def parse_living_heat_forecast(data, raw_text, issue_time_text):
+    if data is not None:
+        rows = flatten_json(data)
+    else:
+        rows = parse_xml_simple_items(raw_text)
+
+    points = []
+    issue_dt = None
+    if issue_time_text and issue_time_text != "0" and len(issue_time_text) == 10:
+        try:
+            issue_dt = datetime.strptime(issue_time_text, "%Y%m%d%H").replace(tzinfo=KST)
+        except Exception:
+            issue_dt = None
+
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+
+        # Case 1: horizon fields such as h0, h3, h6, h9, h12...
+        for key, value in row.items():
+            key_text = str(key).lower().strip()
+            if not (key_text.startswith("h") and key_text[1:].isdigit()):
+                continue
+            apparent = parse_float(value)
+            if apparent is None:
+                continue
+            hour_offset = int(key_text[1:])
+            if issue_dt:
+                target = issue_dt + timedelta(hours=hour_offset)
+                target_time = target.strftime("%H%M")
+                target_date = target.strftime("%Y%m%d")
+            else:
+                target_time = f"+{hour_offset}h"
+                target_date = ""
+            points.append({
+                "date": target_date,
+                "time": target_time,
+                "apparentTemperature": apparent,
+                "level": decide_level(apparent),
+                "sourceKey": key
+            })
+
+        # Case 2: item rows with explicit time and value-style fields.
+        time_value = None
+        for tkey in ["time", "tm", "fcstTime", "dateTime", "tmFc", "tmEf"]:
+            if tkey in row and row.get(tkey):
+                time_value = str(row.get(tkey)).strip()
+                break
+
+        value_key = None
+        for vkey in ["value", "idx", "hidx", "heatIndex", "senTa", "senTaIdx", "ta", "TA"]:
+            if vkey in row and parse_float(row.get(vkey)) is not None:
+                value_key = vkey
+                break
+
+        if value_key:
+            apparent = parse_float(row.get(value_key))
+            if apparent is not None:
+                if time_value and len(time_value) >= 10:
+                    target_date = time_value[:8]
+                    target_time = time_value[8:12] if len(time_value) >= 12 else time_value[8:10] + "00"
+                elif time_value:
+                    target_date = ""
+                    target_time = time_value
+                else:
+                    target_date = ""
+                    target_time = ""
+                points.append({
+                    "date": target_date,
+                    "time": target_time,
+                    "apparentTemperature": apparent,
+                    "level": decide_level(apparent),
+                    "sourceKey": value_key
+                })
+
+    # Deduplicate by time and value.
+    unique = []
+    seen = set()
+    for p in points:
+        key = (p.get("date"), p.get("time"), p.get("apparentTemperature"))
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(p)
+    return unique
 
 
 def fetch_today_forecast(config):
@@ -254,124 +368,89 @@ def fetch_today_forecast(config):
             "forecastItems": []
         }
 
-    nx, ny = get_forecast_grid(config)
+    request_code = get_forecast_request_code(config)
+    areas = get_forecast_areas(config)
     dt = now_kst()
-    base_date, base_time = latest_forecast_base(dt)
+    attempts = []
 
-    params = {
-        "serviceKey": KMA_FORECAST_SERVICE_KEY,
-        "pageNo": "1",
-        "numOfRows": "1000",
-        "dataType": "JSON",
-        "base_date": base_date,
-        "base_time": base_time,
-        "nx": nx,
-        "ny": ny
-    }
+    for area in areas:
+        area_no = area["areaNo"]
+        area_name = area["name"]
+        for time_text in forecast_time_candidates(dt):
+            params = {
+                "numOfRows": "100",
+                "pageNo": "1",
+                "dataType": "JSON",
+                "areaNo": area_no,
+                "time": time_text,
+                "requestCode": request_code,
+                "authKey": KMA_FORECAST_SERVICE_KEY
+            }
+            data, raw_text, full_url, error = request_json_or_xml(FORECAST_URL, params)
+            print(f"[DEBUG] Forecast area={area_name}({area_no}) time={time_text} requestCode={request_code}", flush=True)
 
-    data, full_url, error = request_json_with_retry(FORECAST_URL, params, retry_count=2)
-    if error:
-        return {
-            "ok": False,
-            "forecastStatus": "HTTP_OR_JSON_ERROR",
-            "forecastMessage": error,
-            "forecastItems": [],
-            "forecastNx": nx,
-            "forecastNy": ny,
-            "forecastBaseDate": base_date,
-            "forecastBaseTime": base_time
-        }
+            if error:
+                attempts.append({"areaNo": area_no, "areaName": area_name, "time": time_text, "status": "HTTP_ERROR", "message": error})
+                print(f"[WARN] Forecast HTTP error: {error}", flush=True)
+                continue
 
-    try:
-        header = data.get("response", {}).get("header", {})
-        result_code = str(header.get("resultCode", ""))
-        result_msg = str(header.get("resultMsg", ""))
-        if result_code and result_code != "00":
+            # Detect API error messages in JSON if present.
+            if isinstance(data, dict):
+                header = data.get("response", {}).get("header", {}) if isinstance(data.get("response"), dict) else {}
+                result_code = str(header.get("resultCode", ""))
+                result_msg = str(header.get("resultMsg", ""))
+                if result_code and result_code not in ["00", "0", "1"]:
+                    attempts.append({"areaNo": area_no, "areaName": area_name, "time": time_text, "status": "API_ERROR", "message": result_msg or result_code})
+                    print(f"[WARN] Forecast API error: {result_msg or result_code}", flush=True)
+                    continue
+
+            points = parse_living_heat_forecast(data, raw_text, time_text)
+            if not points:
+                sample = (raw_text or "")[:300].replace("\n", " ")
+                attempts.append({"areaNo": area_no, "areaName": area_name, "time": time_text, "status": "NO_VALID_FORECAST", "message": sample})
+                print("[WARN] Forecast parse failed: NO_VALID_FORECAST", flush=True)
+                continue
+
+            # Prefer today and future points when exact dates are available.
+            today = dt.strftime("%Y%m%d")
+            now_hhmm = dt.strftime("%H%M")
+            filtered = []
+            for p in points:
+                p_date = str(p.get("date", ""))
+                p_time = str(p.get("time", ""))
+                if p_date and p_date != today:
+                    continue
+                if p_time and p_time.isdigit() and len(p_time) == 4 and p_time < now_hhmm:
+                    continue
+                filtered.append(p)
+            if not filtered:
+                filtered = points
+
+            max_point = max(filtered, key=lambda x: x["apparentTemperature"])
             return {
-                "ok": False,
-                "forecastStatus": "API_ERROR",
-                "forecastMessage": result_msg or result_code,
-                "forecastItems": [],
-                "forecastNx": nx,
-                "forecastNy": ny,
-                "forecastBaseDate": base_date,
-                "forecastBaseTime": base_time
+                "ok": True,
+                "forecastStatus": "OK",
+                "forecastMessage": "",
+                "forecastItems": filtered,
+                "forecastMaxApparentTemperature": max_point["apparentTemperature"],
+                "forecastMaxTime": max_point.get("time"),
+                "forecastMaxLevel": max_point["level"],
+                "forecastAreaNo": area_no,
+                "forecastAreaName": area_name,
+                "forecastRequestCode": request_code,
+                "forecastBaseTime": time_text,
+                "forecastBaseDate": time_text[:8] if len(time_text) >= 8 else ""
             }
 
-        items = data.get("response", {}).get("body", {}).get("items", {}).get("item", [])
-    except Exception as exc:
-        return {
-            "ok": False,
-            "forecastStatus": "PARSE_ERROR",
-            "forecastMessage": str(exc),
-            "forecastItems": [],
-            "forecastNx": nx,
-            "forecastNy": ny,
-            "forecastBaseDate": base_date,
-            "forecastBaseTime": base_time
-        }
-
-    today = dt.strftime("%Y%m%d")
-    now_hhmm = dt.strftime("%H%M")
-    by_time = {}
-
-    for item in items:
-        if str(item.get("fcstDate")) != today:
-            continue
-        fcst_time = str(item.get("fcstTime", ""))
-        if fcst_time < now_hhmm:
-            continue
-        category = str(item.get("category", ""))
-        value = item.get("fcstValue")
-        if category not in ["TMP", "REH"]:
-            continue
-        by_time.setdefault(fcst_time, {})[category] = parse_float(value)
-
-    forecast_points = []
-    for fcst_time, values in sorted(by_time.items()):
-        temp = values.get("TMP")
-        reh = values.get("REH")
-        if temp is None or reh is None:
-            continue
-        apparent = calculate_heat_index_celsius(temp, reh)
-        if apparent is None:
-            continue
-        forecast_points.append({
-            "time": fcst_time,
-            "temperature": temp,
-            "humidity": reh,
-            "apparentTemperature": apparent,
-            "level": decide_level(apparent)
-        })
-
-    if not forecast_points:
-        return {
-            "ok": False,
-            "forecastStatus": "NO_VALID_FORECAST",
-            "forecastMessage": "오늘 남은 시간의 TMP/REH 예보값을 찾지 못했습니다.",
-            "forecastItems": [],
-            "forecastNx": nx,
-            "forecastNy": ny,
-            "forecastBaseDate": base_date,
-            "forecastBaseTime": base_time
-        }
-
-    max_point = max(forecast_points, key=lambda x: x["apparentTemperature"])
     return {
-        "ok": True,
-        "forecastStatus": "OK",
-        "forecastMessage": "",
-        "forecastItems": forecast_points,
-        "forecastMaxApparentTemperature": max_point["apparentTemperature"],
-        "forecastMaxTime": max_point["time"],
-        "forecastMaxLevel": max_point["level"],
-        "forecastMaxTemperature": max_point["temperature"],
-        "forecastMaxHumidity": max_point["humidity"],
-        "forecastNx": nx,
-        "forecastNy": ny,
-        "forecastBaseDate": base_date,
-        "forecastBaseTime": base_time
+        "ok": False,
+        "forecastStatus": "NO_VALID_FORECAST",
+        "forecastMessage": "생활기상지수 API에서 유효한 체감온도 예보값을 찾지 못했습니다.",
+        "forecastItems": [],
+        "forecastRequestCode": request_code,
+        "forecastAttempts": attempts[:20]
     }
+
 
 def c_to_f(value):
     return value * 9 / 5 + 32
@@ -700,8 +779,9 @@ def main():
             "forecastMaxLevel": forecast.get("forecastMaxLevel"),
             "forecastBaseDate": forecast.get("forecastBaseDate"),
             "forecastBaseTime": forecast.get("forecastBaseTime"),
-            "forecastNx": forecast.get("forecastNx"),
-            "forecastNy": forecast.get("forecastNy")
+            "forecastAreaNo": forecast.get("forecastAreaNo"),
+            "forecastAreaName": forecast.get("forecastAreaName"),
+            "forecastRequestCode": forecast.get("forecastRequestCode")
         })
         print(json.dumps({"apiStatus": weather.get("apiStatus"), "apiMessage": weather.get("apiMessage"), "attemptsSample": weather.get("attempts", [])[:20], "forecastStatus": forecast.get("forecastStatus"), "forecastMessage": forecast.get("forecastMessage")}, ensure_ascii=False, indent=2), flush=True)
         save_current(current)
@@ -759,8 +839,9 @@ def main():
         "forecastMaxLevel": forecast.get("forecastMaxLevel"),
         "forecastBaseDate": forecast.get("forecastBaseDate"),
         "forecastBaseTime": forecast.get("forecastBaseTime"),
-        "forecastNx": forecast.get("forecastNx"),
-        "forecastNy": forecast.get("forecastNy"),
+        "forecastAreaNo": forecast.get("forecastAreaNo"),
+        "forecastAreaName": forecast.get("forecastAreaName"),
+        "forecastRequestCode": forecast.get("forecastRequestCode"),
     }
     if notify:
         title, message = build_message(config, current, previous_level, reason)
