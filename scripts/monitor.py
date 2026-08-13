@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.1.0"
+VERSION = "v1.1.1"
 KST = timezone(timedelta(hours=9))
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -86,12 +86,12 @@ def get_station_list(config):
     return stations
 
 
-def request_text(url, params):
+def request_text(url, params, timeout_seconds=6):
     query = urllib.parse.urlencode(params)
     full_url = f"{url}?{query}"
     try:
         req = urllib.request.Request(full_url, headers={"User-Agent": "heatstress-monitor/1.0"})
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
             raw = resp.read()
         for enc in ["utf-8", "euc-kr", "cp949"]:
             try:
@@ -157,7 +157,7 @@ def fetch_weather(config):
         return {"ok": False, "apiStatus": "SECRET_MISSING", "apiMessage": "KMA_AUTH_KEY secret is missing", "attempts": []}
     stations = get_station_list(config)
     dt = now_kst()
-    minutes_list = [10, 20, 30, 60]
+    minutes_list = [10, 20, 30]
     attempts = []
     for station in stations:
         sid = station["id"]
@@ -231,7 +231,7 @@ def forecast_time_candidates(dt):
 
 
 def request_json_or_xml(url, params):
-    text, full_url, error = request_text(url, params)
+    text, full_url, error = request_text(url, params, timeout_seconds=15)
     if error:
         return None, text, full_url, error
     try:
