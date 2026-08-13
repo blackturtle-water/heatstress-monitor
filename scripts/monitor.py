@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.3.4"
+VERSION = "v1.4.0"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -156,22 +156,32 @@ def f_to_c(f):
 
 
 def heat_index_c(temp_c, humidity):
+    """대한민국 여름철 체감온도 산출식.
+
+    기온(T, deg C)과 상대습도(RH, %)를 사용해 습구온도 근사값(Tw)을 계산하고,
+    기상청/안전보건공단 산출표와 같은 방식의 여름철 체감온도를 산출한다.
+    기존 미국 NWS Heat Index보다 국내 폭염작업 관리 기준에 가깝다.
+    """
     if temp_c is None or humidity is None:
         return None
-    tf = c_to_f(temp_c)
-    if tf < 80:
-        simple = 0.5 * (tf + 61 + (tf - 68) * 1.2 + humidity * 0.094)
-        return round(f_to_c((simple + tf) / 2), 1)
-    hi = (-42.379 + 2.04901523 * tf + 10.14333127 * humidity - 0.22475541 * tf * humidity
-          - 0.00683783 * tf * tf - 0.05481717 * humidity * humidity
-          + 0.00122874 * tf * tf * humidity + 0.00085282 * tf * humidity * humidity
-          - 0.00000199 * tf * tf * humidity * humidity)
-    if humidity < 13 and 80 <= tf <= 112:
-        hi -= ((13 - humidity) / 4) * math.sqrt(max(0, (17 - abs(tf - 95)) / 17))
-    if humidity > 85 and 80 <= tf <= 87:
-        hi += ((humidity - 85) / 10) * ((87 - tf) / 5)
-    return round(f_to_c(hi), 1)
-
+    T = float(temp_c)
+    RH = max(0.0, min(100.0, float(humidity)))
+    Tw = (
+        T * math.atan(0.151977 * math.sqrt(RH + 8.313659))
+        + math.atan(T + RH)
+        - math.atan(RH - 1.67633)
+        + 0.00391838 * (RH ** 1.5) * math.atan(0.023101 * RH)
+        - 4.686035
+    )
+    apparent = (
+        -0.2442
+        + 0.55399 * Tw
+        + 0.45535 * T
+        - 0.0022 * (Tw ** 2)
+        + 0.00278 * Tw * T
+        + 3.0
+    )
+    return round(apparent, 1)
 
 def decide_level(value):
     if value is None: return "데이터없음"
@@ -266,6 +276,7 @@ def fetch_forecast(config):
         "forecastMaxLevel": peak["level"], "forecastMaxTemperature": peak["temperature"],
         "forecastMaxHumidity": peak["humidity"], "forecastBaseDate": base_date,
         "forecastBaseTime": base_time, "forecastNx": nx, "forecastNy": ny, "forecastGridName": grid_name,
+        "forecastFormula": "KMA_KOSHA_SUMMER_APPARENT_TEMP",
     }
 
 
@@ -297,9 +308,9 @@ def send_teams(current, reason):
     if not TEAMS_WEBHOOK_URL:
         return False
     reason_text = {"regular_08": "08:00 정기보고", "regular_13": "13:00 정기보고", "level_change": "단계변경"}.get(reason, "알림")
-    forecast_text = "오늘 예보 최고: 예보 미제공"
+    forecast_text = "오늘 최고: 오늘 최고 예보 미제공"
     if current.get("forecastMaxApparentTemperature") is not None:
-        forecast_text = f"오늘 예보 최고 {current['forecastMaxApparentTemperature']:.1f}℃ / {current.get('forecastMaxLevel')} / {current.get('forecastMaxTime')}"
+        forecast_text = f"오늘 최고 {current['forecastMaxApparentTemperature']:.1f}℃ / {current.get('forecastMaxLevel')} / {current.get('forecastMaxTime')}"
     lines = [
         f"{reason_text} | {current['level']} | 체감온도 {current['apparentTemperature']:.1f}℃", "",
         f"현재 단계: {current['level']}", f"현재 체감온도: {current['apparentTemperature']:.1f}℃",
