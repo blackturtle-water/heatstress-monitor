@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.1.1"
+VERSION = "v1.1.2"
 KST = timezone(timedelta(hours=9))
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -210,7 +210,8 @@ def get_forecast_areas(config):
             {"areaNo": "3114067000", "name": "야음장생포동"},
             {"areaNo": "3114062500", "name": "대현동"},
             {"areaNo": "3114063500", "name": "수암동"},
-            {"areaNo": "3114057000", "name": "삼산동"}
+            {"areaNo": "3114057000", "name": "삼산동"},
+            {"areaNo": "3114000000", "name": "남구"}
         ]
     return areas
 
@@ -442,10 +443,14 @@ def fetch_today_forecast(config):
                 "forecastBaseDate": time_text[:8] if len(time_text) >= 8 else ""
             }
 
+    first_message = "생활기상지수 API에서 유효한 체감온도 예보값을 찾지 못했습니다."
+    if attempts:
+        first = attempts[0]
+        first_message = f"{first_message} first={first.get('areaName')} {first.get('time')} {first.get('status')}: {first.get('message')}"
     return {
         "ok": False,
         "forecastStatus": "NO_VALID_FORECAST",
-        "forecastMessage": "생활기상지수 API에서 유효한 체감온도 예보값을 찾지 못했습니다.",
+        "forecastMessage": first_message,
         "forecastItems": [],
         "forecastRequestCode": request_code,
         "forecastAttempts": attempts[:20]
@@ -781,7 +786,8 @@ def main():
             "forecastBaseTime": forecast.get("forecastBaseTime"),
             "forecastAreaNo": forecast.get("forecastAreaNo"),
             "forecastAreaName": forecast.get("forecastAreaName"),
-            "forecastRequestCode": forecast.get("forecastRequestCode")
+            "forecastRequestCode": forecast.get("forecastRequestCode"),
+            "forecastAttempts": forecast.get("forecastAttempts")
         })
         print(json.dumps({"apiStatus": weather.get("apiStatus"), "apiMessage": weather.get("apiMessage"), "attemptsSample": weather.get("attempts", [])[:20], "forecastStatus": forecast.get("forecastStatus"), "forecastMessage": forecast.get("forecastMessage")}, ensure_ascii=False, indent=2), flush=True)
         save_current(current)
@@ -842,6 +848,7 @@ def main():
         "forecastAreaNo": forecast.get("forecastAreaNo"),
         "forecastAreaName": forecast.get("forecastAreaName"),
         "forecastRequestCode": forecast.get("forecastRequestCode"),
+        "forecastAttempts": forecast.get("forecastAttempts"),
     }
     if notify:
         title, message = build_message(config, current, previous_level, reason)
