@@ -7,12 +7,14 @@
     { "id": "943", "name": "매곡" },
     { "id": "949", "name": "정자" }
   ],
+  "forecastRequestCode": "A48",
   "forecastAreas": [
     { "areaNo": "3114064000", "name": "선암동" },
     { "areaNo": "3114067000", "name": "야음장생포동" },
     { "areaNo": "3114062500", "name": "대현동" },
     { "areaNo": "3114063500", "name": "수암동" },
-    { "areaNo": "3114057000", "name": "삼산동" }
+    { "areaNo": "3114057000", "name": "삼산동" },
+    { "areaNo": "3114000000", "name": "남구" }
   ],
   "thresholds": {
     "normal": 31,
