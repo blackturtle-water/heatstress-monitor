@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.4.0"
+VERSION = "v1.4.1"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -156,32 +156,65 @@ def f_to_c(f):
 
 
 def heat_index_c(temp_c, humidity):
-    """대한민국 여름철 체감온도 산출식.
+    """대한민국 안전보건공단/산업안전포털 여름철 체감온도 산출표 기반 보간 계산.
 
-    기온(T, deg C)과 상대습도(RH, %)를 사용해 습구온도 근사값(Tw)을 계산하고,
-    기상청/안전보건공단 산출표와 같은 방식의 여름철 체감온도를 산출한다.
-    기존 미국 NWS Heat Index보다 국내 폭염작업 관리 기준에 가깝다.
+    여름철 체감온도는 기온과 습도를 고려한다. 여기서는 공개 산출표의
+    기온 25~40도, 습도 25~100% 격자값을 기준으로 선형 보간한다.
+    산출표 범위 밖은 가장 가까운 경계값으로 고정한다.
     """
     if temp_c is None or humidity is None:
         return None
-    T = float(temp_c)
-    RH = max(0.0, min(100.0, float(humidity)))
-    Tw = (
-        T * math.atan(0.151977 * math.sqrt(RH + 8.313659))
-        + math.atan(T + RH)
-        - math.atan(RH - 1.67633)
-        + 0.00391838 * (RH ** 1.5) * math.atan(0.023101 * RH)
-        - 4.686035
-    )
-    apparent = (
-        -0.2442
-        + 0.55399 * Tw
-        + 0.45535 * T
-        - 0.0022 * (Tw ** 2)
-        + 0.00278 * Tw * T
-        + 3.0
-    )
-    return round(apparent, 1)
+
+    table = {
+        25: [22.2,23.1,24.0,24.9,25.8,26.7,27.6,28.5,29.5,30.4,31.3,32.2,33.1,34.0,35.0,35.9],
+        30: [22.8,23.7,24.6,25.5,26.5,27.4,28.3,29.2,30.2,31.1,32.0,33.0,33.9,34.8,35.8,36.7],
+        35: [23.3,24.2,25.2,26.1,27.0,28.0,28.9,29.9,30.8,31.8,32.7,33.7,34.6,35.6,36.5,37.5],
+        40: [23.8,24.7,25.7,26.6,27.6,28.5,29.5,30.4,31.4,32.4,33.3,34.3,35.3,36.2,37.2,38.2],
+        45: [24.2,25.2,26.1,27.1,28.1,29.0,30.0,31.0,32.0,32.9,33.9,34.9,35.9,36.9,37.8,38.8],
+        50: [24.6,25.6,26.6,27.6,28.6,29.5,30.5,31.5,32.5,33.5,34.5,35.4,36.4,37.4,38.4,39.4],
+        55: [25.1,26.0,27.0,28.0,29.0,30.0,31.0,32.0,33.0,34.0,35.0,36.0,37.0,38.0,39.0,40.0],
+        60: [25.5,26.5,27.5,28.4,29.4,30.4,31.4,32.4,33.5,34.5,35.5,36.5,37.5,38.5,39.5,40.5],
+        65: [25.9,26.9,27.9,28.9,29.9,30.9,31.9,32.9,33.9,34.9,35.9,36.9,38.0,39.0,40.0,41.0],
+        70: [26.2,27.2,28.2,29.3,30.3,31.3,32.3,33.3,34.3,35.4,36.4,37.4,38.4,39.5,40.5,41.5],
+        75: [26.6,27.6,28.6,29.7,30.7,31.7,32.7,33.7,34.8,35.8,36.8,37.8,38.9,39.9,40.9,42.0],
+        80: [27.0,28.0,29.0,30.0,31.1,32.1,33.1,34.1,35.2,36.2,37.2,38.3,39.3,40.4,41.4,42.4],
+        85: [27.3,28.4,29.4,30.4,31.4,32.5,33.5,34.5,35.6,36.6,37.7,38.7,39.7,40.8,41.9,42.9],
+        90: [27.7,28.7,29.7,30.8,31.8,32.9,33.9,34.9,36.0,37.0,38.1,39.1,40.2,41.2,42.3,43.3],
+        95: [28.0,29.1,30.1,31.1,32.2,33.2,34.3,35.3,36.4,37.4,38.5,39.5,40.6,41.6,42.7,43.7],
+        100:[28.4,29.4,30.5,31.5,32.6,33.6,34.6,35.7,36.7,37.8,38.9,39.9,41.0,42.0,43.1,44.1],
+    }
+    temps = list(range(25, 41))
+    hums = sorted(table.keys())
+
+    T = max(25.0, min(40.0, float(temp_c)))
+    RH = max(25.0, min(100.0, float(humidity)))
+
+    # humidity brackets
+    h1 = max(h for h in hums if h <= RH)
+    h2 = min(h for h in hums if h >= RH)
+    # temperature brackets
+    t1 = math.floor(T)
+    t2 = math.ceil(T)
+    t1 = max(25, min(40, t1))
+    t2 = max(25, min(40, t2))
+
+    def value_at(h, t):
+        return table[h][t - 25]
+
+    if t1 == t2:
+        v_h1 = value_at(h1, t1)
+        v_h2 = value_at(h2, t1)
+    else:
+        ratio_t = (T - t1) / (t2 - t1)
+        v_h1 = value_at(h1, t1) + (value_at(h1, t2) - value_at(h1, t1)) * ratio_t
+        v_h2 = value_at(h2, t1) + (value_at(h2, t2) - value_at(h2, t1)) * ratio_t
+
+    if h1 == h2:
+        result = v_h1
+    else:
+        ratio_h = (RH - h1) / (h2 - h1)
+        result = v_h1 + (v_h2 - v_h1) * ratio_h
+    return round(result, 1)
 
 def decide_level(value):
     if value is None: return "데이터없음"
@@ -218,7 +251,7 @@ def cached_forecast_result(cached, status="OK"):
 def fetch_forecast(config):
     if not KMA_FORECAST_SERVICE_KEY:
         cached = read_json(CURRENT_PATH, {})
-        if cached.get("forecastMaxApparentTemperature") is not None:
+        if cached.get("forecastMaxApparentTemperature") is not None and cached.get("forecastFormula") == "KOSHA_TABLE_INTERPOLATION":
             return cached_forecast_result(cached)
         return {"ok": False, "forecastStatus": "SECRET_MISSING", "forecastMessage": "KMA_FORECAST_SERVICE_KEY is missing"}
     grid = config.get("forecastGrid", {})
@@ -228,7 +261,7 @@ def fetch_forecast(config):
 
     cached = read_json(CURRENT_PATH, {})
     if (cached.get("forecastBaseDate") == base_date and cached.get("forecastBaseTime") == base_time
-            and cached.get("forecastMaxApparentTemperature") is not None):
+            and cached.get("forecastMaxApparentTemperature") is not None and cached.get("forecastFormula") == "KOSHA_TABLE_INTERPOLATION"):
         return cached_forecast_result(cached)
 
     params = {
@@ -238,7 +271,7 @@ def fetch_forecast(config):
     }
     raw, _, error = request_bytes(FORECAST_URL, params, timeout=10)
     if error:
-        if cached.get("forecastMaxApparentTemperature") is not None:
+        if cached.get("forecastMaxApparentTemperature") is not None and cached.get("forecastFormula") == "KOSHA_TABLE_INTERPOLATION":
             return cached_forecast_result(cached)
         return {"ok": False, "forecastStatus": "HTTP_ERROR", "forecastMessage": error, "forecastBaseDate": base_date, "forecastBaseTime": base_time, "forecastNx": nx, "forecastNy": ny}
     text = decode_bytes(raw)
@@ -276,7 +309,7 @@ def fetch_forecast(config):
         "forecastMaxLevel": peak["level"], "forecastMaxTemperature": peak["temperature"],
         "forecastMaxHumidity": peak["humidity"], "forecastBaseDate": base_date,
         "forecastBaseTime": base_time, "forecastNx": nx, "forecastNy": ny, "forecastGridName": grid_name,
-        "forecastFormula": "KMA_KOSHA_SUMMER_APPARENT_TEMP",
+        "forecastFormula": "KOSHA_TABLE_INTERPOLATION",
     }
 
 
