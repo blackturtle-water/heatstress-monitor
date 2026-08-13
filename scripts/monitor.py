@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.0.0"
+VERSION = "v1.0.1"
 KST = timezone(timedelta(hours=9))
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,7 +25,7 @@ KMA_FORECAST_SERVICE_KEY = os.environ.get("KMA_FORECAST_SERVICE_KEY") or KMA_AUT
 TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK_URL")
 DASHBOARD_URL = os.environ.get("DASHBOARD_URL", "https://blackturtle-water.github.io/heatstress-monitor/")
 AWS_URL = "https://apihub.kma.go.kr/api/typ01/cgi-bin/url/nph-aws2_min"
-FORECAST_URL = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
+FORECAST_URL = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst"
 
 
 def now_kst():
@@ -91,7 +91,7 @@ def request_text(url, params):
     full_url = f"{url}?{query}"
     try:
         req = urllib.request.Request(full_url, headers={"User-Agent": "heatstress-monitor/1.0"})
-        with urllib.request.urlopen(req, timeout=6) as resp:
+        with urllib.request.urlopen(req, timeout=15) as resp:
             raw = resp.read()
         for enc in ["utf-8", "euc-kr", "cp949"]:
             try:
@@ -230,6 +230,21 @@ def request_json(url, params):
         return None, full_url, f"JSON_ERROR: {exc}"
 
 
+def request_json_with_retry(url, params, retry_count=2):
+    last_data = None
+    last_url = None
+    last_error = None
+    for attempt in range(retry_count + 1):
+        data, full_url, error = request_json(url, params)
+        last_data = data
+        last_url = full_url
+        last_error = error
+        if not error:
+            return data, full_url, None
+        print(f"[WARN] Forecast API attempt {attempt + 1} failed: {error}", flush=True)
+    return last_data, last_url, last_error
+
+
 def fetch_today_forecast(config):
     if not KMA_FORECAST_SERVICE_KEY:
         return {
@@ -254,7 +269,7 @@ def fetch_today_forecast(config):
         "ny": ny
     }
 
-    data, full_url, error = request_json(FORECAST_URL, params)
+    data, full_url, error = request_json_with_retry(FORECAST_URL, params, retry_count=2)
     if error:
         return {
             "ok": False,
