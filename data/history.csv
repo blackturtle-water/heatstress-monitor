@@ -47,3 +47,4 @@ observedAt,siteName,address,apparentTemperature,temperature,humidity,windSpeed,l
 2026-08-14 01:01:33,유니드 울산공장,울산광역시 남구 상개로 142,29.7,26.9,81.6,0.2,정상,정상,False,none,False,STALE_DATA,HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>,898,장생포,202608132350
 2026-08-14 02:03:13,유니드 울산공장,울산광역시 남구 상개로 142,26.9,26.5,81.9,0.4,정상,정상,False,none,False,OK,,898,장생포,202608140153
 2026-08-14 03:01:12,유니드 울산공장,울산광역시 남구 상개로 142,26.9,26.5,81.9,0.4,정상,정상,False,none,False,STALE_DATA,HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>; HTTP_ERROR: <urlopen error timed out>,898,장생포,202608140153
+2026-08-14 04:10:34,유니드 울산공장,울산광역시 남구 상개로 142,25.8,25.4,86.9,0.4,정상,정상,False,none,False,OK,,898,장생포,202608140400
