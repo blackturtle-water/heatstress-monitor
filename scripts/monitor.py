@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.1.2"
+VERSION = "v1.1.3"
 KST = timezone(timedelta(hours=9))
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,7 +25,7 @@ KMA_FORECAST_SERVICE_KEY = os.environ.get("KMA_FORECAST_SERVICE_KEY") or KMA_AUT
 TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK_URL")
 DASHBOARD_URL = os.environ.get("DASHBOARD_URL", "https://blackturtle-water.github.io/heatstress-monitor/")
 AWS_URL = "https://apihub.kma.go.kr/api/typ01/cgi-bin/url/nph-aws2_min"
-FORECAST_URL = "https://apihub.kma.go.kr/openApi/LivingWthrIdxServiceV3/getSenTaIdxV3"
+FORECAST_URL = "https://apihub.kma.go.kr/api/typ02/openApi/LivingWthrIdxServiceV3/getSenTaIdxV3"
 
 
 def now_kst():
@@ -211,7 +211,8 @@ def get_forecast_areas(config):
             {"areaNo": "3114062500", "name": "대현동"},
             {"areaNo": "3114063500", "name": "수암동"},
             {"areaNo": "3114057000", "name": "삼산동"},
-            {"areaNo": "3114000000", "name": "남구"}
+            {"areaNo": "3114000000", "name": "남구"},
+            {"areaNo": "3100000000", "name": "울산광역시"}
         ]
     return areas
 
