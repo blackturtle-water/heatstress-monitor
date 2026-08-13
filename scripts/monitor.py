@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.3.0"
+VERSION = "v1.3.1"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -20,7 +20,7 @@ HISTORY_PATH = DATA_DIR / "history.csv"
 DOCS_CURRENT_PATH = DOCS_DIR / "current.json"
 
 KMA_AUTH_KEY = os.environ.get("KMA_AUTH_KEY", "")
-KMA_FORECAST_SERVICE_KEY = os.environ.get("KMA_FORECAST_SERVICE_KEY", "")
+KMA_FORECAST_SERVICE_KEY = os.environ.get("KMA_FORECAST_SERVICE_KEY", "") or os.environ.get("KMA_AUTH_KEY", "")
 TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK_URL", "")
 DASHBOARD_URL = os.environ.get("DASHBOARD_URL", "https://blackturtle-water.github.io/heatstress-monitor/")
 
