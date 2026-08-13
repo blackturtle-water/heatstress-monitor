@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v0.9.0"
+VERSION = "v0.10.0"
 KST = timezone(timedelta(hours=9))
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -276,6 +276,12 @@ def is_regular_time(dt):
 
 def regular_key(dt):
     return f"{dt.strftime('%Y-%m-%d')}_{dt.hour:02d}"
+
+
+def is_alert_time(dt):
+    # Data is collected 24 hours a day, but Teams notifications are sent only during work monitoring hours.
+    # KST 08:00 through 17:59 are considered notification hours.
+    return 8 <= dt.hour <= 17
 
 
 def should_send_regular(last_state, dt, current_level):
