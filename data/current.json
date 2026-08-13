@@ -1,23 +1,23 @@
 {
-  "observedAt": "2026-08-13 14:52:09",
+  "observedAt": "2026-08-13 15:00:40",
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202608131442",
-  "apparentTemperature": 31.2,
-  "temperature": 28.3,
-  "humidity": 69.8,
-  "windSpeed": 3.1,
-  "level": "주의",
+  "awsObservedTime": "202608131450",
+  "apparentTemperature": 30.9,
+  "temperature": 28.1,
+  "humidity": 70.0,
+  "windSpeed": 3.2,
+  "level": "정상",
   "previousLevel": "주의",
-  "levelChanged": false,
-  "notificationReason": "none",
-  "teamsNotified": false,
+  "levelChanged": true,
+  "notificationReason": "level_change",
+  "teamsNotified": true,
   "apiStatus": "OK",
   "apiMessage": "",
   "forecastStatus": "NO_VALID_FORECAST",
-  "forecastMessage": "생활기상지수 API에서 유효한 체감온도 예보값을 찾지 못했습니다. first=선암동 2026081306 API_ERROR: NO_DATA",
+  "forecastMessage": "생활기상지수 API에서 유효한 체감온도 예보값을 찾지 못했습니다. first=선암동 0 NO_VALID_FORECAST: <?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r ",
   "forecastMaxApparentTemperature": null,
   "forecastMaxTime": null,
   "forecastMaxLevel": null,
@@ -30,142 +30,142 @@
     {
       "areaNo": "3114064000",
       "areaName": "선암동",
+      "time": "0",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
+    },
+    {
+      "areaNo": "3114064000",
+      "areaName": "선암동",
+      "time": "2026081314",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
+    },
+    {
+      "areaNo": "3114064000",
+      "areaName": "선암동",
+      "time": "2026081311",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
+    },
+    {
+      "areaNo": "3114064000",
+      "areaName": "선암동",
+      "time": "2026081308",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
+    },
+    {
+      "areaNo": "3114064000",
+      "areaName": "선암동",
       "time": "2026081306",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
+    },
+    {
+      "areaNo": "3114064000",
+      "areaName": "선암동",
+      "time": "2026081305",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
+    },
+    {
+      "areaNo": "3114064000",
+      "areaName": "선암동",
+      "time": "2026081302",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
+    },
+    {
+      "areaNo": "3114064000",
+      "areaName": "선암동",
+      "time": "2026081223",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
+    },
+    {
+      "areaNo": "3114064000",
+      "areaName": "선암동",
+      "time": "2026081220",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
     },
     {
       "areaNo": "3114064000",
       "areaName": "선암동",
       "time": "2026081218",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
+    },
+    {
+      "areaNo": "3114064000",
+      "areaName": "선암동",
+      "time": "2026081217",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
+    },
+    {
+      "areaNo": "3114064000",
+      "areaName": "선암동",
+      "time": "2026081214",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
+    },
+    {
+      "areaNo": "3114064000",
+      "areaName": "선암동",
+      "time": "2026081211",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
+    },
+    {
+      "areaNo": "3114064000",
+      "areaName": "선암동",
+      "time": "2026081208",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
     },
     {
       "areaNo": "3114064000",
       "areaName": "선암동",
       "time": "2026081206",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
     },
     {
       "areaNo": "3114064000",
       "areaName": "선암동",
-      "time": "0",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
+      "time": "2026081205",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
     },
     {
-      "areaNo": "3114067000",
-      "areaName": "야음장생포동",
-      "time": "2026081306",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
-    },
-    {
-      "areaNo": "3114067000",
-      "areaName": "야음장생포동",
-      "time": "2026081218",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
-    },
-    {
-      "areaNo": "3114067000",
-      "areaName": "야음장생포동",
-      "time": "2026081206",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
+      "areaNo": "3114064000",
+      "areaName": "선암동",
+      "time": "2026081202",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
     },
     {
       "areaNo": "3114067000",
       "areaName": "야음장생포동",
       "time": "0",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
     },
     {
-      "areaNo": "3114062500",
-      "areaName": "대현동",
-      "time": "2026081306",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
+      "areaNo": "3114067000",
+      "areaName": "야음장생포동",
+      "time": "2026081314",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
     },
     {
-      "areaNo": "3114062500",
-      "areaName": "대현동",
-      "time": "2026081218",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
-    },
-    {
-      "areaNo": "3114062500",
-      "areaName": "대현동",
-      "time": "2026081206",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
-    },
-    {
-      "areaNo": "3114062500",
-      "areaName": "대현동",
-      "time": "0",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
-    },
-    {
-      "areaNo": "3114063500",
-      "areaName": "수암동",
-      "time": "2026081306",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
-    },
-    {
-      "areaNo": "3114063500",
-      "areaName": "수암동",
-      "time": "2026081218",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
-    },
-    {
-      "areaNo": "3114063500",
-      "areaName": "수암동",
-      "time": "2026081206",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
-    },
-    {
-      "areaNo": "3114063500",
-      "areaName": "수암동",
-      "time": "0",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
-    },
-    {
-      "areaNo": "3114057000",
-      "areaName": "삼산동",
-      "time": "2026081306",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
-    },
-    {
-      "areaNo": "3114057000",
-      "areaName": "삼산동",
-      "time": "2026081218",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
-    },
-    {
-      "areaNo": "3114057000",
-      "areaName": "삼산동",
-      "time": "2026081206",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
-    },
-    {
-      "areaNo": "3114057000",
-      "areaName": "삼산동",
-      "time": "0",
-      "status": "API_ERROR",
-      "message": "NO_DATA"
+      "areaNo": "3114067000",
+      "areaName": "야음장생포동",
+      "time": "2026081311",
+      "status": "NO_VALID_FORECAST",
+      "message": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r <response><header><resultCode>03</resultCode><resultMsg>NO_DATA</resultMsg></header><body><dataType>XML</dataType><items /><numOfRows>100</numOfRows><pageNo>1</pageNo><totalCount>0</totalCount></body></response>\r "
     }
   ]
 }
