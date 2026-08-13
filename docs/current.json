@@ -1,14 +1,14 @@
 {
-  "observedAt": "2026-08-13 14:35:35",
+  "observedAt": "2026-08-13 14:43:59",
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202608131425",
+  "awsObservedTime": "202608131433",
   "apparentTemperature": 31.5,
   "temperature": 28.5,
-  "humidity": 69.1,
-  "windSpeed": 3.0,
+  "humidity": 68.8,
+  "windSpeed": 2.8,
   "level": "주의",
   "previousLevel": "주의",
   "levelChanged": false,
@@ -17,7 +17,7 @@
   "apiStatus": "OK",
   "apiMessage": "",
   "forecastStatus": "NO_VALID_FORECAST",
-  "forecastMessage": "생활기상지수 API에서 유효한 체감온도 예보값을 찾지 못했습니다. first=선암동 2026081314 NO_VALID_FORECAST: <!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty",
+  "forecastMessage": "생활기상지수 API에서 유효한 체감온도 예보값을 찾지 못했습니다. first=선암동 2026081314 API_ERROR: NO_DATA",
   "forecastMaxApparentTemperature": null,
   "forecastMaxTime": null,
   "forecastMaxLevel": null,
@@ -31,141 +31,141 @@
       "areaNo": "3114064000",
       "areaName": "선암동",
       "time": "2026081314",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114064000",
       "areaName": "선암동",
       "time": "2026081313",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114064000",
       "areaName": "선암동",
       "time": "2026081312",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114064000",
       "areaName": "선암동",
       "time": "2026081311",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114064000",
       "areaName": "선암동",
       "time": "2026081308",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114064000",
       "areaName": "선암동",
       "time": "2026081305",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114064000",
       "areaName": "선암동",
       "time": "2026081302",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114064000",
       "areaName": "선암동",
       "time": "2026081214",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114064000",
       "areaName": "선암동",
       "time": "0",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114067000",
       "areaName": "야음장생포동",
       "time": "2026081314",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114067000",
       "areaName": "야음장생포동",
       "time": "2026081313",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114067000",
       "areaName": "야음장생포동",
       "time": "2026081312",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114067000",
       "areaName": "야음장생포동",
       "time": "2026081311",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114067000",
       "areaName": "야음장생포동",
       "time": "2026081308",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114067000",
       "areaName": "야음장생포동",
       "time": "2026081305",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114067000",
       "areaName": "야음장생포동",
       "time": "2026081302",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114067000",
       "areaName": "야음장생포동",
       "time": "2026081214",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114067000",
       "areaName": "야음장생포동",
       "time": "0",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114062500",
       "areaName": "대현동",
       "time": "2026081314",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     },
     {
       "areaNo": "3114062500",
       "areaName": "대현동",
       "time": "2026081313",
-      "status": "NO_VALID_FORECAST",
-      "message": "<!DOCTYPE html>  <html lang=\"ko\"> <meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />  <!--  <div th:replace=\"fragments/noFrameHead\"></div> --> <div></div> <body> \t<div class=\"content-container\" style=\"width: 100%; height: 300px; text-align: center; padding-top: 100px;\"> \t\t<div sty"
+      "status": "API_ERROR",
+      "message": "NO_DATA"
     }
   ]
 }
