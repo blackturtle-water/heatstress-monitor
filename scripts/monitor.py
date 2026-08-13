@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.1.4"
+VERSION = "v1.1.5"
 KST = timezone(timedelta(hours=9))
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -222,28 +222,30 @@ def get_forecast_request_code(config):
 
 
 def forecast_time_candidates(dt):
-    # 생활기상지수 체감온도는 URL 발행 예시 기준 발표시각이 YYYYMMDDHH 형식이다.
-    # 화면 예시가 06시/18시 발표 체계이므로, 현재 시각 기준 최신 06/18 발표값부터 조회한다.
+    # 생활기상지수는 지수별로 일 2회 또는 일 8회 생산된다.
+    # 따라서 2회 생산 후보(06/18)와 8회 생산 후보(02/05/08/11/14/17/20/23)를 함께 시도한다.
     today = dt.strftime("%Y%m%d")
     yesterday = (dt - timedelta(days=1)).strftime("%Y%m%d")
-    tomorrow = (dt + timedelta(days=1)).strftime("%Y%m%d")
+    two_times = ["06", "18"]
+    eight_times = ["02", "05", "08", "11", "14", "17", "20", "23"]
 
     candidates = []
-    if dt.hour >= 18:
-        candidates.extend([today + "18", today + "06", yesterday + "18", yesterday + "06"])
-    elif dt.hour >= 6:
-        candidates.extend([today + "06", yesterday + "18", yesterday + "06"])
-    else:
-        candidates.extend([yesterday + "18", yesterday + "06"])
+    for day in [today, yesterday]:
+        hours = two_times + eight_times
+        for hour in hours:
+            value = day + hour
+            if day == today and int(hour) > dt.hour:
+                continue
+            candidates.append(value)
 
-    # APIHub 화면에서 0은 최신값 조회로 동작할 수 있어 마지막 후보로 둔다.
     candidates.append("0")
 
-    # 중복 제거
     result = []
     for item in candidates:
         if item not in result:
             result.append(item)
+    # 최신 시각부터 우선 조회
+    result = [x for x in result if x == "0"] + sorted([x for x in result if x != "0"], reverse=True)
     return result
 
 
@@ -397,7 +399,7 @@ def fetch_today_forecast(config):
             params = {
                 "numOfRows": "100",
                 "pageNo": "1",
-                "dataType": "JSON",
+                "dataType": "XML",
                 "areaNo": area_no,
                 "time": time_text,
                 "requestCode": request_code,
