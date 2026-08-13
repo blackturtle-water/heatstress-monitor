@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v0.8.0"
+VERSION = "v0.9.0"
 KST = timezone(timedelta(hours=9))
 
 ROOT = Path(__file__).resolve().parents[1]
