@@ -1,5 +1,5 @@
 {
-  "observedAt": "2026-08-13 13:03:59",
+  "observedAt": "2026-08-13 13:11:01",
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
@@ -12,8 +12,17 @@
   "level": "주의",
   "previousLevel": "주의",
   "levelChanged": false,
-  "notificationReason": "regular_13",
-  "teamsNotified": true,
-  "apiStatus": "OK",
-  "apiMessage": ""
+  "notificationReason": "stale_data",
+  "teamsNotified": false,
+  "apiStatus": "STALE_DATA",
+  "apiMessage": "AWS 관측자료를 일시적으로 가져오지 못해 마지막 정상 데이터를 표시 중입니다.",
+  "forecastStatus": "HTTP_OR_JSON_ERROR",
+  "forecastMessage": "HTTP_ERROR: <urlopen error timed out>",
+  "forecastMaxApparentTemperature": null,
+  "forecastMaxTime": null,
+  "forecastMaxLevel": null,
+  "forecastBaseDate": "20260813",
+  "forecastBaseTime": "1100",
+  "forecastNx": "102",
+  "forecastNy": "83"
 }
