@@ -9,12 +9,7 @@
   ],
   "forecastRequestCode": "A48",
   "forecastAreas": [
-    { "areaNo": "3114064000", "name": "선암동" },
-    { "areaNo": "3114067000", "name": "야음장생포동" },
-    { "areaNo": "3114062500", "name": "대현동" },
-    { "areaNo": "3114063500", "name": "수암동" },
-    { "areaNo": "3114057000", "name": "삼산동" },
-    { "areaNo": "3114000000", "name": "남구" },
+    { "areaNo": "3111064000", "name": "중구 약사동" },
     { "areaNo": "3100000000", "name": "울산광역시" }
   ],
   "thresholds": {
