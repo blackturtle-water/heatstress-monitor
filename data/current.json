@@ -1,9 +1,9 @@
 {
   "observedAt": "2026-08-14 14:58:00",
   "dataObservedAt": "2026-08-14 14:58:00",
-  "dataGeneratedAt": "2026-08-14 15:08:08",
-  "dataAgeMinutes": 10.1,
-  "isStaleData": false,
+  "dataGeneratedAt": "2026-08-14 15:20:55",
+  "dataAgeMinutes": 22.9,
+  "isStaleData": true,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
@@ -15,8 +15,8 @@
   "windSpeed": 1.7,
   "level": "주의",
   "previousLevel": "주의",
-  "apiStatus": "OK",
-  "apiMessage": "",
+  "apiStatus": "STALE_DATA",
+  "apiMessage": "실측 API 응답 지연으로 마지막 정상 관측값을 표시 중입니다.",
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
@@ -97,5 +97,6 @@
   "forecastFormula": "KOSHA_TABLE_INTERPOLATION",
   "levelChanged": false,
   "notificationReason": "none",
-  "teamsNotified": false
+  "teamsNotified": false,
+  "forecastSource": "CACHE"
 }
