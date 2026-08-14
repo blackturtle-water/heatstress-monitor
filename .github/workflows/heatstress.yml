@@ -3,10 +3,10 @@ name: Heat Stress Monitor
 on:
   schedule:
     # GitHub Actions cron is UTC.
-    # Work time collection: KST 08:00~17:55 every 5 minutes.
-    # KST 08:00~08:55 = UTC 23:00~23:55 previous day
-    # KST 09:00~17:55 = UTC 00:00~08:55
-    - cron: "*/5 23,0-8 * * *"
+    # Work time collection: KST 08:00~17:50 every 10 minutes.
+    # KST 08:00~08:50 = UTC 23:00~23:50 previous day
+    # KST 09:00~17:50 = UTC 00:00~08:50
+    - cron: "*/10 23,0-8 * * *"
 
     # Off-hours collection: KST 18:05~07:05 once per hour.
     - cron: "5 9-22 * * *"
