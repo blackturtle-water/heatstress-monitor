@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.4.6"
+VERSION = "v1.4.8"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -156,23 +156,31 @@ def parse_aws(text, station_id):
 def fetch_weather(config):
     if not KMA_AUTH_KEY:
         return {"ok": False, "apiStatus": "SECRET_MISSING", "apiMessage": "KMA_AUTH_KEY is missing"}
+
     attempts = []
+    dt = now_kst()
+    # AWS 분자료는 몇 분 지연되어 제공될 수 있어 넓은 시간 후보를 조회한다.
+    # 5분 단위 실행과 맞춰 8~60분 전까지 확인하고, timeout은 15초로 늘린다.
+    minute_candidates = [8, 10, 13, 15, 18, 20, 25, 30, 40, 50, 60]
+
     for station in config.get("awsStations", []):
         sid = str(station.get("id", ""))
         name = str(station.get("name", sid))
-        for back in [10, 20, 30]:
-            tm2 = (now_kst() - timedelta(minutes=back)).strftime("%Y%m%d%H%M")
-            text, _, error = request_text(AWS_URL, {"tm2": tm2, "stn": sid, "disp": "0", "help": "1", "authKey": KMA_AUTH_KEY}, timeout=6)
-            print(f"[DEBUG] AWS station={name}({sid}) tm2={tm2}", flush=True)
+        for back in minute_candidates:
+            tm2 = (dt - timedelta(minutes=back)).strftime("%Y%m%d%H%M")
+            params = {"tm2": tm2, "stn": sid, "disp": "0", "help": "0", "authKey": KMA_AUTH_KEY}
+            text, _, error = request_text(AWS_URL, params, timeout=15)
+            print(f"[DEBUG] AWS station={name}({sid}) tm2={tm2} back={back}", flush=True)
             if error:
-                attempts.append(error)
+                attempts.append(f"{name} {tm2} {error}")
                 continue
             parsed = parse_aws(text, sid)
             if parsed:
                 parsed.update({"ok": True, "apiStatus": "OK", "apiMessage": "", "stationId": sid, "stationName": name})
                 return parsed
             attempts.append(f"NO_DATA {name} {tm2}")
-    return {"ok": False, "apiStatus": "NO_DATA", "apiMessage": "; ".join(attempts[-5:])}
+
+    return {"ok": False, "apiStatus": "NO_DATA", "apiMessage": "; ".join(attempts[-8:])}
 
 
 def c_to_f(c):
