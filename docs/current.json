@@ -1,46 +1,25 @@
 {
-  "observedAt": "2026-08-14 13:14:00",
-  "dataObservedAt": "2026-08-14 13:14:00",
-  "dataGeneratedAt": "2026-08-14 13:24:00",
-  "dataAgeMinutes": 10.0,
+  "observedAt": "2026-08-14 14:58:00",
+  "dataObservedAt": "2026-08-14 14:58:00",
+  "dataGeneratedAt": "2026-08-14 15:08:08",
+  "dataAgeMinutes": 10.1,
   "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202608141314",
-  "apparentTemperature": 32.0,
-  "temperature": 31.3,
-  "humidity": 63.2,
-  "windSpeed": 1.6,
+  "awsObservedTime": "202608141458",
+  "apparentTemperature": 31.7,
+  "temperature": 30.9,
+  "humidity": 64.4,
+  "windSpeed": 1.7,
   "level": "주의",
-  "previousLevel": "경계",
+  "previousLevel": "주의",
   "apiStatus": "OK",
   "apiMessage": "",
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "1200",
-      "temperature": 31.0,
-      "humidity": 65.0,
-      "apparentTemperature": 31.9,
-      "level": "주의"
-    },
-    {
-      "time": "1300",
-      "temperature": 32.0,
-      "humidity": 65.0,
-      "apparentTemperature": 32.9,
-      "level": "주의"
-    },
-    {
-      "time": "1400",
-      "temperature": 32.0,
-      "humidity": 60.0,
-      "apparentTemperature": 32.4,
-      "level": "주의"
-    },
     {
       "time": "1500",
       "temperature": 32.0,
@@ -105,18 +84,18 @@
       "level": "정상"
     }
   ],
-  "forecastMaxApparentTemperature": 32.9,
-  "forecastMaxTime": "1300",
+  "forecastMaxApparentTemperature": 32.4,
+  "forecastMaxTime": "1500",
   "forecastMaxLevel": "주의",
   "forecastMaxTemperature": 32.0,
-  "forecastMaxHumidity": 65.0,
+  "forecastMaxHumidity": 60.0,
   "forecastBaseDate": "20260814",
-  "forecastBaseTime": "1100",
+  "forecastBaseTime": "1400",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
-  "forecastSource": "CACHE",
-  "levelChanged": true,
-  "notificationReason": "level_change",
-  "teamsNotified": true
+  "forecastFormula": "KOSHA_TABLE_INTERPOLATION",
+  "levelChanged": false,
+  "notificationReason": "none",
+  "teamsNotified": false
 }
