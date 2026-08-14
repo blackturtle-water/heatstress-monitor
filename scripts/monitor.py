@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.4.4"
+VERSION = "v1.4.5"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -105,6 +105,34 @@ def parse_float(value):
     except ValueError:
         return None
     return None if value <= -50 else value
+
+def parse_kma_time_ymdhm(value):
+    text = str(value or "").strip()
+    if len(text) >= 12 and text[:12].isdigit():
+        try:
+            return datetime.strptime(text[:12], "%Y%m%d%H%M").replace(tzinfo=KST)
+        except Exception:
+            return None
+    return None
+
+
+def fmt_kst(dt):
+    return dt.strftime("%Y-%m-%d %H:%M:%S") if dt else None
+
+
+def minutes_between(later, earlier):
+    if not later or not earlier:
+        return None
+    return round((later - earlier).total_seconds() / 60, 1)
+
+
+def short_api_message(message):
+    text = str(message or "")
+    if "timed out" in text:
+        return "실측 API 응답 지연으로 마지막 정상 관측값을 표시 중입니다."
+    if len(text) > 120:
+        return text[:120] + "..."
+    return text
 
 
 def parse_aws(text, station_id):
@@ -410,7 +438,7 @@ def send_teams(current, reason):
 
 
 def append_history(current):
-    fields = ["observedAt", "siteName", "address", "apparentTemperature", "temperature", "humidity", "windSpeed", "level", "previousLevel", "levelChanged", "notificationReason", "teamsNotified", "apiStatus", "apiMessage", "awsStation", "awsStationName", "awsObservedTime"]
+    fields = ["observedAt", "dataGeneratedAt", "dataAgeMinutes", "siteName", "address", "apparentTemperature", "temperature", "humidity", "windSpeed", "level", "previousLevel", "levelChanged", "notificationReason", "teamsNotified", "apiStatus", "apiMessage", "awsStation", "awsStationName", "awsObservedTime"]
     exists = HISTORY_PATH.exists()
     with HISTORY_PATH.open("a", newline="", encoding="utf-8-sig") as f:
         writer = csv.DictWriter(f, fieldnames=fields)
@@ -426,11 +454,19 @@ def main():
     last = read_json(LAST_STATE_PATH, {"level": "정상", "regularReports": {}})
     weather = fetch_weather(config)
     forecast = fetch_forecast(config)
+    generated_at = fmt_kst(dt)
     if weather.get("ok"):
         apparent = heat_index_c(weather["temperature"], weather["humidity"])
         level = decide_level(apparent)
+        observed_dt = parse_kma_time_ymdhm(weather.get("observedTime"))
+        data_age = minutes_between(dt, observed_dt)
         current = {
-            "observedAt": dt.strftime("%Y-%m-%d %H:%M:%S"), "siteName": config["siteName"], "address": config["address"],
+            "observedAt": fmt_kst(observed_dt) or generated_at,
+            "dataObservedAt": fmt_kst(observed_dt),
+            "dataGeneratedAt": generated_at,
+            "dataAgeMinutes": data_age,
+            "isStaleData": False,
+            "siteName": config["siteName"], "address": config["address"],
             "awsStation": weather["stationId"], "awsStationName": weather["stationName"], "awsObservedTime": weather["observedTime"],
             "apparentTemperature": apparent, "temperature": weather["temperature"], "humidity": weather["humidity"], "windSpeed": weather.get("windSpeed"),
             "level": level, "previousLevel": last.get("level", "정상"), "apiStatus": "OK", "apiMessage": "",
@@ -438,7 +474,18 @@ def main():
     else:
         cached = read_json(CURRENT_PATH, {})
         current = dict(cached) if cached.get("apparentTemperature") is not None else {"apparentTemperature": None, "temperature": None, "humidity": None, "windSpeed": None, "level": "데이터없음"}
-        current.update({"observedAt": dt.strftime("%Y-%m-%d %H:%M:%S"), "siteName": config["siteName"], "address": config["address"], "previousLevel": last.get("level", "정상"), "apiStatus": "STALE_DATA", "apiMessage": weather.get("apiMessage", "")})
+        observed_dt = parse_kma_time_ymdhm(current.get("awsObservedTime"))
+        current.update({
+            "observedAt": fmt_kst(observed_dt) or current.get("observedAt") or generated_at,
+            "dataObservedAt": fmt_kst(observed_dt) or current.get("dataObservedAt"),
+            "dataGeneratedAt": generated_at,
+            "dataAgeMinutes": minutes_between(dt, observed_dt),
+            "isStaleData": True,
+            "siteName": config["siteName"], "address": config["address"],
+            "previousLevel": last.get("level", "정상"),
+            "apiStatus": "STALE_DATA",
+            "apiMessage": short_api_message(weather.get("apiMessage", ""))
+        })
     current.update({k: v for k, v in forecast.items() if k != "ok"})
     notify, reason = determine_notification(last, current["level"], dt)
     current["levelChanged"] = reason == "level_change"
@@ -446,11 +493,12 @@ def main():
     current["teamsNotified"] = send_teams(current, reason) if notify else False
     write_json(CURRENT_PATH, current)
     write_json(DOCS_CURRENT_PATH, current)
-    append_history(current)
+    if current.get("apiStatus") == "OK":
+        append_history(current)
     reports = last.get("regularReports", {}) if isinstance(last.get("regularReports"), dict) else {}
     if reason in ["regular_08", "regular_13"] and current["teamsNotified"]:
         reports[regular_key(dt)] = current["observedAt"]
-    write_json(LAST_STATE_PATH, {"level": current["level"], "apparentTemperature": current.get("apparentTemperature"), "observedAt": current["observedAt"], "temperature": current.get("temperature"), "humidity": current.get("humidity"), "windSpeed": current.get("windSpeed"), "awsStation": current.get("awsStation"), "awsStationName": current.get("awsStationName"), "awsObservedTime": current.get("awsObservedTime"), "regularReports": reports})
+    write_json(LAST_STATE_PATH, {"level": current["level"], "apparentTemperature": current.get("apparentTemperature"), "observedAt": current["observedAt"], "dataGeneratedAt": current.get("dataGeneratedAt"), "temperature": current.get("temperature"), "humidity": current.get("humidity"), "windSpeed": current.get("windSpeed"), "awsStation": current.get("awsStation"), "awsStationName": current.get("awsStationName"), "awsObservedTime": current.get("awsObservedTime"), "regularReports": reports})
     print(json.dumps(current, ensure_ascii=False, indent=2), flush=True)
 
 
