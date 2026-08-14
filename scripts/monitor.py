@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.4.5"
+VERSION = "v1.4.6"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -411,6 +411,11 @@ def send_teams(current, reason):
             {
                 "activityTitle": "필요 조치",
                 "text": actions_text,
+                "markdown": True,
+            },
+            {
+                "activityTitle": "대시보드",
+                "text": f"[대시보드 바로가기]({DASHBOARD_URL})  \n{DASHBOARD_URL}",
                 "markdown": True,
             },
         ],
