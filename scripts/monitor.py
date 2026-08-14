@@ -9,7 +9,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.5.3"
+VERSION = "v1.5.4"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -379,17 +379,46 @@ def fetch_forecast(config):
     }
 
 
+def is_non_working_day(dt):
+    """주말 및 공휴일에는 Teams 알림을 보내지 않는다.
+
+    현재 운영용으로 2026년 대한민국 공휴일과 대체공휴일을 반영한다.
+    다음 해 운영 전에는 목록을 갱신하거나 공휴일 API 연동으로 전환한다.
+    """
+    if dt.weekday() >= 5:  # Saturday=5, Sunday=6
+        return True
+    holidays_2026 = {
+        "2026-01-01",  # 신정
+        "2026-02-16", "2026-02-17", "2026-02-18",  # 설날 연휴
+        "2026-03-01", "2026-03-02",  # 삼일절 및 대체공휴일
+        "2026-05-05",  # 어린이날/부처님오신날
+        "2026-06-06",  # 현충일
+        "2026-08-15", "2026-08-17",  # 광복절 및 대체공휴일
+        "2026-09-24", "2026-09-25", "2026-09-26",  # 추석 연휴
+        "2026-10-03", "2026-10-05",  # 개천절 및 대체공휴일
+        "2026-10-09",  # 한글날
+        "2026-12-25",  # 성탄절
+    }
+    return dt.strftime("%Y-%m-%d") in holidays_2026
+
+
 def regular_key(dt):
     return f"{dt.strftime('%Y-%m-%d')}_{dt.hour:02d}"
 
 
 def determine_notification(last_state, level, dt):
+    if is_non_working_day(dt):
+        return False, "holiday_or_weekend"
+
     previous = last_state.get("level", "정상")
     if 8 <= dt.hour <= 17 and previous != level and level != "데이터없음":
         return True, "level_change"
+
     reports = last_state.get("regularReports", {})
-    if dt.hour in [8, 13] and regular_key(dt) not in reports and level != "데이터없음":
-        return True, "regular_08" if dt.hour == 8 else "regular_13"
+    regular_hours = [8, 10, 13, 15]
+    if dt.hour in regular_hours and regular_key(dt) not in reports and level != "데이터없음":
+        return True, f"regular_{dt.hour:02d}"
+
     return False, "none"
 
 
@@ -418,7 +447,13 @@ def send_teams(current, reason):
     if not TEAMS_WEBHOOK_URL:
         return False
 
-    reason_text = {"regular_08": "08:00 정기보고", "regular_13": "13:00 정기보고", "level_change": "단계변경"}.get(reason, "알림")
+    reason_text = {
+        "regular_08": "08:00 정기보고",
+        "regular_10": "10:00 정기보고",
+        "regular_13": "13:00 정기보고",
+        "regular_15": "15:00 정기보고",
+        "level_change": "단계변경",
+    }.get(reason, "알림")
     current_temp_text = "-" if current.get("apparentTemperature") is None else f"{current.get('apparentTemperature'):.1f}℃"
     current_level = current.get("level", "-")
 
@@ -550,7 +585,7 @@ def main():
     if current.get("apiStatus") == "OK":
         append_history(current)
     reports = last.get("regularReports", {}) if isinstance(last.get("regularReports"), dict) else {}
-    if reason in ["regular_08", "regular_13"] and current["teamsNotified"]:
+    if reason.startswith("regular_") and current["teamsNotified"]:
         reports[regular_key(dt)] = current["observedAt"]
     write_json(LAST_STATE_PATH, {"level": current["level"], "apparentTemperature": current.get("apparentTemperature"), "observedAt": current["observedAt"], "dataGeneratedAt": current.get("dataGeneratedAt"), "temperature": current.get("temperature"), "humidity": current.get("humidity"), "windSpeed": current.get("windSpeed"), "awsStation": current.get("awsStation"), "awsStationName": current.get("awsStationName"), "awsObservedTime": current.get("awsObservedTime"), "regularReports": reports})
     print(json.dumps(current, ensure_ascii=False, indent=2), flush=True)
