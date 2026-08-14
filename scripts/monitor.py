@@ -9,7 +9,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.5.4"
+VERSION = "v1.5.5"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -19,6 +19,12 @@ CURRENT_PATH = DATA_DIR / "current.json"
 LAST_STATE_PATH = DATA_DIR / "last_state.json"
 HISTORY_PATH = DATA_DIR / "history.csv"
 DOCS_CURRENT_PATH = DOCS_DIR / "current.json"
+HISTORY_FIELDS = [
+    "observedAt", "dataGeneratedAt", "dataAgeMinutes", "siteName", "address",
+    "apparentTemperature", "temperature", "humidity", "windSpeed",
+    "level", "previousLevel", "levelChanged", "notificationReason", "teamsNotified",
+    "apiStatus", "apiMessage", "awsStation", "awsStationName", "awsObservedTime",
+]
 
 KMA_AUTH_KEY = os.environ.get("KMA_AUTH_KEY", "")
 KMA_FORECAST_SERVICE_KEY = os.environ.get("KMA_VILAGE_FCST_AUTH_KEY", "") or os.environ.get("KMA_AUTH_KEY", "") or os.environ.get("KMA_FORECAST_SERVICE_KEY", "")
@@ -526,13 +532,150 @@ def send_teams(current, reason):
         return False
 
 
+def looks_datetime(value):
+    text = str(value or "").strip()
+    return len(text) >= 16 and text[4:5] == "-" and text[7:8] == "-" and (" " in text or "T" in text)
+
+
+def number_text(value):
+    value = str(value or "").strip()
+    try:
+        numeric = float(value)
+    except Exception:
+        return ""
+    if numeric <= -50:
+        return ""
+    return value
+
+
+def normalize_history_row(row):
+    row = list(row)
+    if not row or not looks_datetime(row[0]):
+        return None
+
+    # Canonical v2 row:
+    # observedAt,dataGeneratedAt,dataAgeMinutes,siteName,address,apparentTemperature,...
+    if len(row) >= 19 and looks_datetime(row[1]):
+        data = {field: (row[i] if i < len(row) else "") for i, field in enumerate(HISTORY_FIELDS)}
+    else:
+        # Legacy row before dataGeneratedAt/dataAgeMinutes were inserted.
+        data = {field: "" for field in HISTORY_FIELDS}
+        data.update({
+            "observedAt": row[0] if len(row) > 0 else "",
+            "siteName": row[1] if len(row) > 1 else "",
+            "address": row[2] if len(row) > 2 else "",
+            "apparentTemperature": row[3] if len(row) > 3 else "",
+            "temperature": row[4] if len(row) > 4 else "",
+            "humidity": row[5] if len(row) > 5 else "",
+            "windSpeed": row[6] if len(row) > 6 else "",
+            "level": row[7] if len(row) > 7 else "",
+            "previousLevel": row[8] if len(row) > 8 else "",
+            "levelChanged": row[9] if len(row) > 9 else "",
+        })
+        idx = 10
+        if len(row) > idx and (row[idx] == "none" or row[idx] == "stale_data" or row[idx] == "level_change" or row[idx].startswith("regular_")):
+            data["notificationReason"] = row[idx]
+            idx += 1
+        if len(row) > idx:
+            data["teamsNotified"] = row[idx]
+            idx += 1
+        if len(row) > idx:
+            data["apiStatus"] = row[idx]
+            idx += 1
+        if len(row) > idx:
+            data["apiMessage"] = row[idx]
+            idx += 1
+        if len(row) > idx:
+            data["awsStation"] = row[idx]
+            idx += 1
+        if len(row) > idx:
+            # Some legacy rows have stationName here, some have awsObservedTime directly.
+            if str(row[idx]).isdigit() and len(str(row[idx])) >= 10:
+                data["awsObservedTime"] = row[idx]
+            else:
+                data["awsStationName"] = row[idx]
+                idx += 1
+                if len(row) > idx:
+                    data["awsObservedTime"] = row[idx]
+
+    data["apparentTemperature"] = number_text(data.get("apparentTemperature"))
+    data["temperature"] = number_text(data.get("temperature"))
+    data["humidity"] = number_text(data.get("humidity"))
+    data["windSpeed"] = number_text(data.get("windSpeed"))
+
+    # Keep only valid rows for graph/statistics. Stale/no-data rows duplicate old values and distort charts.
+    if not data.get("apparentTemperature"):
+        return None
+    if data.get("apiStatus") and data.get("apiStatus") != "OK":
+        return None
+    return {field: data.get(field, "") for field in HISTORY_FIELDS}
+
+
+def migrate_history_schema():
+    if not HISTORY_PATH.exists():
+        return
+    try:
+        with HISTORY_PATH.open("r", newline="", encoding="utf-8-sig") as f:
+            rows = list(csv.reader(f))
+    except Exception as exc:
+        print(f"[WARN] history read failed: {exc}", flush=True)
+        return
+    if not rows:
+        return
+    header = rows[0]
+    if header == HISTORY_FIELDS:
+        return
+
+    normalized = []
+    seen = set()
+    for raw in rows[1:]:
+        item = normalize_history_row(raw)
+        if not item:
+            continue
+        key = item.get("observedAt")
+        if key in seen:
+            continue
+        seen.add(key)
+        normalized.append(item)
+
+    backup = HISTORY_PATH.with_suffix(".csv.bak")
+    try:
+        if not backup.exists():
+            backup.write_text(HISTORY_PATH.read_text(encoding="utf-8-sig"), encoding="utf-8-sig")
+    except Exception as exc:
+        print(f"[WARN] history backup failed: {exc}", flush=True)
+
+    with HISTORY_PATH.open("w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.DictWriter(f, fieldnames=HISTORY_FIELDS)
+        writer.writeheader()
+        writer.writerows(normalized)
+    print(f"[INFO] migrated history.csv rows={len(normalized)}", flush=True)
+
+
+def history_has_observed_at(observed_at):
+    if not observed_at or not HISTORY_PATH.exists():
+        return False
+    try:
+        with HISTORY_PATH.open("r", newline="", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f)
+            return any(row.get("observedAt") == observed_at for row in reader)
+    except Exception:
+        return False
+
+
 def append_history(current):
-    fields = ["observedAt", "dataGeneratedAt", "dataAgeMinutes", "siteName", "address", "apparentTemperature", "temperature", "humidity", "windSpeed", "level", "previousLevel", "levelChanged", "notificationReason", "teamsNotified", "apiStatus", "apiMessage", "awsStation", "awsStationName", "awsObservedTime"]
+    migrate_history_schema()
     exists = HISTORY_PATH.exists()
+    if current.get("apiStatus") != "OK":
+        return
+    if history_has_observed_at(current.get("observedAt")):
+        print(f"[INFO] history duplicate skipped: {current.get('observedAt')}", flush=True)
+        return
     with HISTORY_PATH.open("a", newline="", encoding="utf-8-sig") as f:
-        writer = csv.DictWriter(f, fieldnames=fields)
-        if not exists: writer.writeheader()
-        writer.writerow({k: current.get(k, "") for k in fields})
+        writer = csv.DictWriter(f, fieldnames=HISTORY_FIELDS)
+        if not exists:
+            writer.writeheader()
+        writer.writerow({k: current.get(k, "") for k in HISTORY_FIELDS})
 
 
 def main():
