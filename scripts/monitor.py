@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.4.3"
+VERSION = "v1.4.4"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -340,24 +340,68 @@ def actions_for(level):
 def send_teams(current, reason):
     if not TEAMS_WEBHOOK_URL:
         return False
+
     reason_text = {"regular_08": "08:00 정기보고", "regular_13": "13:00 정기보고", "level_change": "단계변경"}.get(reason, "알림")
     current_temp_text = "-" if current.get("apparentTemperature") is None else f"{current.get('apparentTemperature'):.1f}℃"
-    toast_summary = f"{reason_text} | {current.get('level', '-')} | 체감온도 {current_temp_text}"
-    forecast_text = "오늘 최고 예보 미제공"
+    current_level = current.get("level", "-")
+
+    forecast_time_raw = str(current.get("forecastMaxTime", ""))
+    forecast_time_text = f"{forecast_time_raw[:2]}:{forecast_time_raw[2:4]}" if len(forecast_time_raw) >= 4 else "-"
     if current.get("forecastMaxApparentTemperature") is not None:
-        forecast_time_raw = str(current.get("forecastMaxTime", ""))
-        forecast_time_text = f"{forecast_time_raw[:2]}:{forecast_time_raw[2:4]}" if len(forecast_time_raw) >= 4 else forecast_time_raw
-        forecast_text = f"오늘 최고 {current['forecastMaxApparentTemperature']:.1f}℃ / {current.get('forecastMaxLevel')} / {forecast_time_text}"
-        toast_summary = f"{reason_text} | {current.get('level', '-')} | 현재 {current_temp_text} | 오늘 최고 {current['forecastMaxApparentTemperature']:.1f}℃ {forecast_time_text}"
-    lines = [
-        f"{reason_text} | {current['level']} | 체감온도 {current['apparentTemperature']:.1f}℃", "",
-        f"현재 단계: {current['level']}", f"현재 체감온도: {current['apparentTemperature']:.1f}℃",
-        f"기온: {current['temperature']:.1f}℃ / 습도: {current['humidity']:.1f}% / 풍속: {current.get('windSpeed') or '-'} m/s",
-        forecast_text, "", "필요 조치",
-    ] + [f"- {x}" for x in actions_for(current["level"])]
-    payload = {"type": "message", "summary": toast_summary, "text": toast_summary, "attachments": [{"contentType": "application/vnd.microsoft.card.adaptive", "content": {"$schema": "http://adaptivecards.io/schemas/adaptive-card.json", "type": "AdaptiveCard", "version": "1.4", "fallbackText": toast_summary, "body": [{"type": "TextBlock", "text": lines[0], "weight": "Bolder", "size": "Large", "wrap": True}, {"type": "TextBlock", "text": "\n".join(lines[1:]), "wrap": True}], "actions": [{"type": "Action.OpenUrl", "title": "대시보드 바로가기", "url": DASHBOARD_URL}]}}]}
+        forecast_text = f"오늘 예상 최고 {current['forecastMaxApparentTemperature']:.1f}℃ / {current.get('forecastMaxLevel', '-')} / {forecast_time_text}"
+        toast_summary = f"{reason_text} | {current_level} | 현재 {current_temp_text} | 오늘 최고 {current['forecastMaxApparentTemperature']:.1f}℃ {forecast_time_text}"
+    else:
+        forecast_text = "오늘 예상 최고 예보 미제공"
+        toast_summary = f"{reason_text} | {current_level} | 체감온도 {current_temp_text}"
+
+    facts = [
+        {"name": "현재 단계", "value": str(current_level)},
+        {"name": "현재 체감온도", "value": current_temp_text},
+        {"name": "기온/습도/풍속", "value": f"{current.get('temperature', '-'):.1f}℃ / {current.get('humidity', '-'):.1f}% / {current.get('windSpeed') or '-'} m/s"},
+        {"name": "예상 최고", "value": forecast_text},
+        {"name": "관측지점", "value": f"{current.get('awsStationName', '-')} ({current.get('awsStation', '-')})"},
+    ]
+
+    actions_text = "\n".join([f"- {item}" for item in actions_for(current_level)])
+
+    # MessageCard로 전송한다. Adaptive Card는 모바일 푸시에서 'card'로만 보이는 경우가 있어,
+    # summary/title/text를 쓰는 MessageCard 형식을 우선 사용한다.
+    payload = {
+        "@type": "MessageCard",
+        "@context": "https://schema.org/extensions",
+        "summary": toast_summary,
+        "themeColor": "0076D7",
+        "title": toast_summary,
+        "text": f"**{reason_text}**  \n{forecast_text}",
+        "sections": [
+            {
+                "activityTitle": f"온열질환 모니터링 | {current_level}",
+                "activitySubtitle": current.get("observedAt", ""),
+                "facts": facts,
+                "markdown": True,
+            },
+            {
+                "activityTitle": "필요 조치",
+                "text": actions_text,
+                "markdown": True,
+            },
+        ],
+        "potentialAction": [
+            {
+                "@type": "OpenUri",
+                "name": "대시보드 바로가기",
+                "targets": [{"os": "default", "uri": DASHBOARD_URL}],
+            }
+        ],
+    }
+
     try:
-        req = urllib.request.Request(TEAMS_WEBHOOK_URL, data=json.dumps(payload, ensure_ascii=False).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
+        req = urllib.request.Request(
+            TEAMS_WEBHOOK_URL,
+            data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
         with urllib.request.urlopen(req, timeout=10) as resp:
             return 200 <= resp.status < 300
     except Exception as exc:
