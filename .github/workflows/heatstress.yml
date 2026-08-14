@@ -23,6 +23,7 @@ permissions:
 jobs:
   monitor:
     runs-on: ubuntu-latest
+    timeout-minutes: 4
 
     steps:
       - name: Checkout repository
