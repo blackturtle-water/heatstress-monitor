@@ -9,7 +9,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.5.0"
+VERSION = "v1.5.1"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -397,7 +397,7 @@ def actions_for(level):
     base = [
         "시원하고 깨끗한 물을 충분히 제공하고, 작업자가 규칙적으로 마시도록 안내합니다.",
         "작업자가 즉시 쉴 수 있는 그늘 또는 냉방 휴게시설을 확보합니다.",
-        "체감온도 단계에 맞춰 휴식시간을 부여하고, 휴식 누락 여부를 확인합니다.",
+        "체감온도 31℃ 이상 단계에서는 매 2시간마다 20분 이상 휴식시간을 부여하고, 휴식 누락 여부를 확인합니다.",
         "무더위 시간대에는 옥외작업을 조정·단축하고, 위험 단계 이상에서는 작업중지를 검토합니다.",
         "어지러움·두통·구토 등 온열질환 의심 증상이 있으면 즉시 작업을 중지하고 시원한 장소 이동, 냉각, 119 신고를 실시합니다.",
     ]
