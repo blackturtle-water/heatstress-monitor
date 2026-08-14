@@ -8,7 +8,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.4.1"
+VERSION = "v1.4.2"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -341,16 +341,21 @@ def send_teams(current, reason):
     if not TEAMS_WEBHOOK_URL:
         return False
     reason_text = {"regular_08": "08:00 정기보고", "regular_13": "13:00 정기보고", "level_change": "단계변경"}.get(reason, "알림")
-    forecast_text = "오늘 최고: 오늘 최고 예보 미제공"
+    current_temp_text = "-" if current.get("apparentTemperature") is None else f"{current.get('apparentTemperature'):.1f}℃"
+    toast_summary = f"{reason_text} | {current.get('level', '-')} | 체감온도 {current_temp_text}"
+    forecast_text = "오늘 최고 예보 미제공"
     if current.get("forecastMaxApparentTemperature") is not None:
-        forecast_text = f"오늘 최고 {current['forecastMaxApparentTemperature']:.1f}℃ / {current.get('forecastMaxLevel')} / {current.get('forecastMaxTime')}"
+        forecast_time_raw = str(current.get("forecastMaxTime", ""))
+        forecast_time_text = f"{forecast_time_raw[:2]}:{forecast_time_raw[2:4]}" if len(forecast_time_raw) >= 4 else forecast_time_raw
+        forecast_text = f"오늘 최고 {current['forecastMaxApparentTemperature']:.1f}℃ / {current.get('forecastMaxLevel')} / {forecast_time_text}"
+        toast_summary = f"{reason_text} | {current.get('level', '-')} | 현재 {current_temp_text} | 오늘 최고 {current['forecastMaxApparentTemperature']:.1f}℃ {forecast_time_text}"
     lines = [
         f"{reason_text} | {current['level']} | 체감온도 {current['apparentTemperature']:.1f}℃", "",
         f"현재 단계: {current['level']}", f"현재 체감온도: {current['apparentTemperature']:.1f}℃",
         f"기온: {current['temperature']:.1f}℃ / 습도: {current['humidity']:.1f}% / 풍속: {current.get('windSpeed') or '-'} m/s",
         forecast_text, "", "필요 조치",
     ] + [f"- {x}" for x in actions_for(current["level"])]
-    payload = {"type": "message", "attachments": [{"contentType": "application/vnd.microsoft.card.adaptive", "content": {"$schema": "http://adaptivecards.io/schemas/adaptive-card.json", "type": "AdaptiveCard", "version": "1.4", "body": [{"type": "TextBlock", "text": lines[0], "weight": "Bolder", "size": "Large", "wrap": True}, {"type": "TextBlock", "text": "\n".join(lines[1:]), "wrap": True}], "actions": [{"type": "Action.OpenUrl", "title": "대시보드 바로가기", "url": DASHBOARD_URL}]}}]}
+    payload = {"type": "message", "summary": toast_summary, "text": toast_summary, "attachments": [{"contentType": "application/vnd.microsoft.card.adaptive", "content": {"$schema": "http://adaptivecards.io/schemas/adaptive-card.json", "type": "AdaptiveCard", "version": "1.4", "fallbackText": toast_summary, "body": [{"type": "TextBlock", "text": lines[0], "weight": "Bolder", "size": "Large", "wrap": True}, {"type": "TextBlock", "text": "\n".join(lines[1:]), "wrap": True}], "actions": [{"type": "Action.OpenUrl", "title": "대시보드 바로가기", "url": DASHBOARD_URL}]}}]}
     try:
         req = urllib.request.Request(TEAMS_WEBHOOK_URL, data=json.dumps(payload, ensure_ascii=False).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
         with urllib.request.urlopen(req, timeout=10) as resp:
