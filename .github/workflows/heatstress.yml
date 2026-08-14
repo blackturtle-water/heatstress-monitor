@@ -48,9 +48,24 @@ jobs:
           python -u scripts/monitor.py
           echo "=== Finished heat stress monitor ==="
 
-      - name: Copy dashboard history data
+      - name: Copy dashboard data
         run: |
           mkdir -p docs
+
+          if [ -f data/current.json ]; then
+            cp data/current.json docs/current.json
+            echo "Copied data/current.json to docs/current.json"
+          else
+            echo "data/current.json not found"
+          fi
+
+          if [ -f data/last_state.json ]; then
+            cp data/last_state.json docs/last_state.json
+            echo "Copied data/last_state.json to docs/last_state.json"
+          else
+            echo "data/last_state.json not found"
+          fi
+
           if [ -f data/history.csv ]; then
             cp data/history.csv docs/history.csv
             echo "Copied data/history.csv to docs/history.csv"
