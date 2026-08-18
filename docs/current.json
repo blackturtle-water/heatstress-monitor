@@ -1,9 +1,9 @@
 {
   "observedAt": "2026-08-18 13:15:00",
   "dataObservedAt": "2026-08-18 13:15:00",
-  "dataGeneratedAt": "2026-08-18 13:23:52",
-  "dataAgeMinutes": 8.9,
-  "isStaleData": false,
+  "dataGeneratedAt": "2026-08-18 13:59:23",
+  "dataAgeMinutes": 44.4,
+  "isStaleData": true,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
@@ -14,9 +14,9 @@
   "humidity": 88.8,
   "windSpeed": 1.9,
   "level": "정상",
-  "previousLevel": "주의",
-  "apiStatus": "OK",
-  "apiMessage": "",
+  "previousLevel": "정상",
+  "apiStatus": "STALE_DATA",
+  "apiMessage": "실측 API 조회가 제한시간을 초과해 마지막 정상 관측값을 표시 중입니다.",
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
@@ -116,7 +116,8 @@
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
   "forecastFormula": "KOSHA_TABLE_INTERPOLATION",
-  "levelChanged": true,
-  "notificationReason": "level_change",
-  "teamsNotified": true
+  "levelChanged": false,
+  "notificationReason": "regular_13",
+  "teamsNotified": true,
+  "forecastSource": "CACHE"
 }
