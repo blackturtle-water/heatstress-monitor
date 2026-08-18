@@ -462,6 +462,20 @@ def send_teams(current, reason):
     }.get(reason, "알림")
     current_temp_text = "-" if current.get("apparentTemperature") is None else f"{current.get('apparentTemperature'):.1f}℃"
     current_level = current.get("level", "-")
+    level_theme = {
+        "정상": "00AA55",
+        "주의": "FACC15",
+        "경계": "FB923C",
+        "위험": "EF4444",
+        "매우위험": "991B1B",
+    }.get(current_level, "0076D7")
+    level_icon = {
+        "정상": "🟢",
+        "주의": "🟡",
+        "경계": "🟠",
+        "위험": "🔴",
+        "매우위험": "🟥",
+    }.get(current_level, "⚪")
 
     forecast_time_raw = str(current.get("forecastMaxTime", ""))
     forecast_time_text = f"{forecast_time_raw[:2]}:{forecast_time_raw[2:4]}" if len(forecast_time_raw) >= 4 else "-"
@@ -488,8 +502,8 @@ def send_teams(current, reason):
         "@type": "MessageCard",
         "@context": "https://schema.org/extensions",
         "summary": toast_summary,
-        "themeColor": "0076D7",
-        "title": toast_summary,
+        "themeColor": level_theme,
+        "title": f"{level_icon} {toast_summary}",
         "text": f"**{reason_text}**  \n{forecast_text}",
         "sections": [
             {
