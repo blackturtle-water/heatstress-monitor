@@ -2,6 +2,7 @@ import csv
 import json
 import math
 import os
+import re
 import sys
 import time
 import urllib.parse
@@ -9,7 +10,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.5.5"
+VERSION = "v1.6.2"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -412,19 +413,30 @@ def regular_key(dt):
     return f"{dt.strftime('%Y-%m-%d')}_{dt.hour:02d}"
 
 
+def regular_reason_hour(reason):
+    match = re.search(r"regular_(\d{2})", str(reason or ""))
+    return int(match.group(1)) if match else None
+
+
 def determine_notification(last_state, level, dt):
+    # 주말과 공휴일에는 정기보고와 단계변경을 포함한 모든 Teams 알림을 차단한다.
     if is_non_working_day(dt):
         return False, "holiday_or_weekend"
 
     previous = last_state.get("level", "정상")
-    if 8 <= dt.hour <= 17 and previous != level and level != "데이터없음":
-        return True, "level_change"
+    level_changed = previous != level and level != "데이터없음"
 
+    # 평일 08~17시는 매시간 첫 실행에서 정기보고한다.
     reports = last_state.get("regularReports", {})
-    regular_hours = [8, 10, 13, 15]
-    if dt.hour in regular_hours and regular_key(dt) not in reports and level != "데이터없음":
-        return True, f"regular_{dt.hour:02d}"
+    regular_due = 8 <= dt.hour <= 17 and regular_key(dt) not in reports and level != "데이터없음"
 
+    if regular_due and level_changed:
+        return True, f"regular_{dt.hour:02d}_level_change"
+    if regular_due:
+        return True, f"regular_{dt.hour:02d}"
+    # 평일에는 업무시간 밖이라도 단계가 바뀌면 알린다.
+    if level_changed:
+        return True, "level_change"
     return False, "none"
 
 
@@ -453,29 +465,31 @@ def send_teams(current, reason):
     if not TEAMS_WEBHOOK_URL:
         return False
 
-    reason_text = {
-        "regular_08": "08:00 정기보고",
-        "regular_10": "10:00 정기보고",
-        "regular_13": "13:00 정기보고",
-        "regular_15": "15:00 정기보고",
-        "level_change": "단계변경",
-    }.get(reason, "알림")
+    report_hour = regular_reason_hour(reason)
+    if report_hour is not None and "level_change" in reason:
+        reason_text = f"{report_hour:02d}:00 정기보고 / 단계변경"
+    elif report_hour is not None:
+        reason_text = f"{report_hour:02d}:00 정기보고"
+    elif reason == "level_change":
+        reason_text = "단계변경"
+    else:
+        reason_text = "알림"
+
     current_temp_text = "-" if current.get("apparentTemperature") is None else f"{current.get('apparentTemperature'):.1f}℃"
     current_level = current.get("level", "-")
     level_theme = {
-        "정상": "00AA55",
-        "주의": "FACC15",
-        "경계": "FB923C",
-        "위험": "EF4444",
-        "매우위험": "991B1B",
+        "정상": "00AA55", "주의": "FACC15", "경계": "FB923C",
+        "위험": "EF4444", "매우위험": "991B1B",
     }.get(current_level, "0076D7")
     level_icon = {
-        "정상": "🟢",
-        "주의": "🟡",
-        "경계": "🟠",
-        "위험": "🔴",
-        "매우위험": "🟥",
+        "정상": "🟢", "주의": "🟡", "경계": "🟠",
+        "위험": "🔴", "매우위험": "🟥",
     }.get(current_level, "⚪")
+    stale_note = ""
+    if current.get("isStaleData"):
+        age = current.get("dataAgeMinutes")
+        age_text = f"{age:.1f}분" if isinstance(age, (int, float)) else "확인 필요"
+        stale_note = f"  \n⚠ 신규 실측 수집 실패로 직전 정상 관측값을 사용했습니다. 데이터 경과: {age_text}"
 
     forecast_time_raw = str(current.get("forecastMaxTime", ""))
     forecast_time_text = f"{forecast_time_raw[:2]}:{forecast_time_raw[2:4]}" if len(forecast_time_raw) >= 4 else "-"
@@ -489,6 +503,8 @@ def send_teams(current, reason):
     facts = [
         {"name": "현재 단계", "value": str(current_level)},
         {"name": "현재 체감온도", "value": current_temp_text},
+        {"name": "실제 관측시각", "value": str(current.get("observedAt", "-"))},
+        {"name": "자료 상태", "value": "직전 정상값 사용" if current.get("isStaleData") else "최신 실측"},
         {"name": "기온/습도/풍속", "value": f"{current.get('temperature', '-'):.1f}℃ / {current.get('humidity', '-'):.1f}% / {current.get('windSpeed') or '-'} m/s"},
         {"name": "예상 최고", "value": forecast_text},
         {"name": "관측지점", "value": f"{current.get('awsStationName', '-')} ({current.get('awsStation', '-')})"},
@@ -504,7 +520,7 @@ def send_teams(current, reason):
         "summary": toast_summary,
         "themeColor": level_theme,
         "title": f"{level_icon} {toast_summary}",
-        "text": f"**{reason_text}**  \n{forecast_text}",
+        "text": f"**{reason_text}**  \n{forecast_text}{stale_note}",
         "sections": [
             {
                 "activityTitle": f"온열질환 모니터링 | {current_level}",
@@ -666,13 +682,22 @@ def migrate_history_schema():
     print(f"[INFO] migrated history.csv rows={len(normalized)}", flush=True)
 
 
-def history_has_observed_at(observed_at):
+def history_has_event(observed_at, notification_reason):
     if not observed_at or not HISTORY_PATH.exists():
         return False
     try:
         with HISTORY_PATH.open("r", newline="", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
-            return any(row.get("observedAt") == observed_at for row in reader)
+            for row in reader:
+                if row.get("observedAt") != observed_at:
+                    continue
+                existing_reason = row.get("notificationReason", "")
+                if notification_reason.startswith("regular_"):
+                    if existing_reason == notification_reason:
+                        return True
+                else:
+                    return True
+        return False
     except Exception:
         return False
 
@@ -680,10 +705,14 @@ def history_has_observed_at(observed_at):
 def append_history(current):
     migrate_history_schema()
     exists = HISTORY_PATH.exists()
-    if current.get("apiStatus") != "OK":
+    reason = str(current.get("notificationReason", ""))
+    is_successful_regular = reason.startswith("regular_") and bool(current.get("teamsNotified"))
+
+    # 일반 이력은 정상 API 값만 저장한다. 정기보고는 수집 실패 시 직전 정상값을 사용한 사실도 기록한다.
+    if current.get("apiStatus") != "OK" and not is_successful_regular:
         return
-    if history_has_observed_at(current.get("observedAt")):
-        print(f"[INFO] history duplicate skipped: {current.get('observedAt')}", flush=True)
+    if history_has_event(current.get("observedAt"), reason):
+        print(f"[INFO] history duplicate skipped: {current.get('observedAt')} / {reason}", flush=True)
         return
     with HISTORY_PATH.open("a", newline="", encoding="utf-8-sig") as f:
         writer = csv.DictWriter(f, fieldnames=HISTORY_FIELDS)
@@ -734,15 +763,14 @@ def main():
         })
     current.update({k: v for k, v in forecast.items() if k != "ok"})
     notify, reason = determine_notification(last, current["level"], dt)
-    current["levelChanged"] = reason == "level_change"
+    current["levelChanged"] = "level_change" in reason
     current["notificationReason"] = reason
     current["teamsNotified"] = send_teams(current, reason) if notify else False
     write_json(CURRENT_PATH, current)
     write_json(DOCS_CURRENT_PATH, current)
-    if current.get("apiStatus") == "OK":
-        append_history(current)
+    append_history(current)
     reports = last.get("regularReports", {}) if isinstance(last.get("regularReports"), dict) else {}
-    if reason.startswith("regular_") and current["teamsNotified"]:
+    if regular_reason_hour(reason) is not None and current["teamsNotified"]:
         reports[regular_key(dt)] = current["observedAt"]
     write_json(LAST_STATE_PATH, {"level": current["level"], "apparentTemperature": current.get("apparentTemperature"), "observedAt": current["observedAt"], "dataGeneratedAt": current.get("dataGeneratedAt"), "temperature": current.get("temperature"), "humidity": current.get("humidity"), "windSpeed": current.get("windSpeed"), "awsStation": current.get("awsStation"), "awsStationName": current.get("awsStationName"), "awsObservedTime": current.get("awsObservedTime"), "regularReports": reports})
     print(json.dumps(current, ensure_ascii=False, indent=2), flush=True)
