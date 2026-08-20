@@ -1,18 +1,18 @@
 {
-  "observedAt": "2026-08-21 04:26:00",
-  "dataObservedAt": "2026-08-21 04:26:00",
-  "dataGeneratedAt": "2026-08-21 04:34:12",
-  "dataAgeMinutes": 8.2,
+  "observedAt": "2026-08-21 05:23:00",
+  "dataObservedAt": "2026-08-21 05:23:00",
+  "dataGeneratedAt": "2026-08-21 05:31:42",
+  "dataAgeMinutes": 8.7,
   "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202608210426",
+  "awsObservedTime": "202608210523",
   "apparentTemperature": 29.3,
   "temperature": 26.5,
   "humidity": 91.3,
-  "windSpeed": 0.0,
+  "windSpeed": 0.6,
   "level": "정상",
   "previousLevel": "정상",
   "apiStatus": "OK",
@@ -20,27 +20,6 @@
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "0300",
-      "temperature": 25.0,
-      "humidity": 90.0,
-      "apparentTemperature": 27.7,
-      "level": "정상"
-    },
-    {
-      "time": "0400",
-      "temperature": 25.0,
-      "humidity": 90.0,
-      "apparentTemperature": 27.7,
-      "level": "정상"
-    },
-    {
-      "time": "0500",
-      "temperature": 24.0,
-      "humidity": 95.0,
-      "apparentTemperature": 28.0,
-      "level": "정상"
-    },
     {
       "time": "0600",
       "temperature": 24.0,
@@ -174,7 +153,7 @@
   "forecastMaxTemperature": 31.0,
   "forecastMaxHumidity": 70.0,
   "forecastBaseDate": "20260821",
-  "forecastBaseTime": "0200",
+  "forecastBaseTime": "0500",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
