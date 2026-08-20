@@ -10,7 +10,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.6.5"
+VERSION = "v1.6.6"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -418,32 +418,69 @@ def regular_reason_hour(reason):
     return int(match.group(1)) if match else None
 
 
-def determine_notifications(last_state, level, dt):
-    """정기보고와 단계변경을 서로 독립적으로 판정한다."""
+def report_target(dt):
+    """현재 실행이 담당할 정기보고 목표시각을 계산한다.
+
+    매시 50분부터 다음 정시 보고 후보 구간이 시작된다.
+    예: 14:50~15:29는 15시 정기보고 구간이다.
+    """
+    if dt.minute >= 50:
+        target = (dt + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+    else:
+        target = dt.replace(minute=0, second=0, microsecond=0)
+    return target if 8 <= target.hour <= 17 else None
+
+
+def regular_key_for(target):
+    return f"{target.strftime('%Y-%m-%d')}_{target.hour:02d}"
+
+
+def determine_notifications(last_state, level, dt, observed_at=None):
+    """정기보고와 단계변경을 독립 판정한다.
+
+    정기보고는 목표시각 10분 전부터 29분 후까지 처리한다.
+    목표시각 10분 전 이후의 관측값이 확보되면 즉시 보고하고,
+    목표시각 30분 이후에는 관측시각과 무관하게 최근 정상값으로 보고한다.
+    """
     if is_non_working_day(dt):
-        return {"regularReason": None, "levelChange": False, "blockedReason": "holiday_or_weekend"}
+        return {"regularReason": None, "regularKey": None, "levelChange": False, "blockedReason": "holiday_or_weekend"}
 
     previous = last_state.get("level", "정상")
     level_changed = previous != level and level != "데이터없음"
-
     reports = last_state.get("regularReports", {})
+    target = report_target(dt)
     regular_reason = None
-    # 매시간 00~29분 사이의 실행에서만 해당 시간 정기보고를 시도한다.
-    # Teams 전송이 실패하면 regularReports에 기록되지 않으므로 다음 10분 실행에서 다시 시도한다.
-    # 30분 이후에는 지난 정기보고를 소급 발송하거나 누락 기록을 생성하지 않는다.
-    if 8 <= dt.hour <= 17 and dt.minute >= 30 and level != "데이터없음" and regular_key(dt) not in reports:
-        regular_reason = f"regular_{dt.hour:02d}"
+    regular_key_value = None
+
+    if target is not None and level != "데이터없음":
+        report_key = regular_key_for(target)
+        window_start = target - timedelta(minutes=10)
+        window_end = target + timedelta(minutes=30)
+        observed_dt = None
+        if observed_at:
+            try:
+                observed_dt = datetime.strptime(str(observed_at)[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=KST)
+            except Exception:
+                observed_dt = None
+
+        within_window = window_start <= dt < window_end
+        fresh_candidate = observed_dt is not None and observed_dt >= window_start
+        fallback_due = dt >= window_end
+        if report_key not in reports and (within_window and fresh_candidate or fallback_due):
+            regular_reason = f"regular_{target.hour:02d}"
+            regular_key_value = report_key
 
     return {
         "regularReason": regular_reason,
+        "regularKey": regular_key_value,
         "levelChange": level_changed,
         "blockedReason": None,
     }
 
 
-def determine_notification(last_state, level, dt):
+def determine_notification(last_state, level, dt, observed_at=None):
     """기존 호출 호환용. 신규 코드는 determine_notifications를 사용한다."""
-    result = determine_notifications(last_state, level, dt)
+    result = determine_notifications(last_state, level, dt, observed_at)
     if result.get("blockedReason"):
         return False, result["blockedReason"]
     if result.get("regularReason"):
@@ -771,7 +808,7 @@ def main():
             "apiMessage": short_api_message(weather.get("apiMessage", ""))
         })
     current.update({k: v for k, v in forecast.items() if k != "ok"})
-    decisions = determine_notifications(last, current["level"], dt)
+    decisions = determine_notifications(last, current["level"], dt, current.get("observedAt"))
     regular_reason = decisions.get("regularReason")
     level_change_due = bool(decisions.get("levelChange"))
 
@@ -822,8 +859,8 @@ def main():
         append_history(ordinary_event)
 
     reports = last.get("regularReports", {}) if isinstance(last.get("regularReports"), dict) else {}
-    if regular_reason and regular_sent:
-        reports[regular_key(dt)] = current["observedAt"]
+    if regular_reason and regular_sent and decisions.get("regularKey"):
+        reports[decisions["regularKey"]] = current["observedAt"]
     write_json(LAST_STATE_PATH, {"level": current["level"], "apparentTemperature": current.get("apparentTemperature"), "observedAt": current["observedAt"], "dataGeneratedAt": current.get("dataGeneratedAt"), "temperature": current.get("temperature"), "humidity": current.get("humidity"), "windSpeed": current.get("windSpeed"), "awsStation": current.get("awsStation"), "awsStationName": current.get("awsStationName"), "awsObservedTime": current.get("awsObservedTime"), "regularReports": reports})
     print(json.dumps(current, ensure_ascii=False, indent=2), flush=True)
 
