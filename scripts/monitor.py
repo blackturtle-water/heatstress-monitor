@@ -10,7 +10,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.6.4"
+VERSION = "v1.6.5"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -431,7 +431,7 @@ def determine_notifications(last_state, level, dt):
     # 매시간 00~29분 사이의 실행에서만 해당 시간 정기보고를 시도한다.
     # Teams 전송이 실패하면 regularReports에 기록되지 않으므로 다음 10분 실행에서 다시 시도한다.
     # 30분 이후에는 지난 정기보고를 소급 발송하거나 누락 기록을 생성하지 않는다.
-    if 8 <= dt.hour <= 17 and dt.minute < 30 and level != "데이터없음" and regular_key(dt) not in reports:
+    if 8 <= dt.hour <= 17 and dt.minute >= 30 and level != "데이터없음" and regular_key(dt) not in reports:
         regular_reason = f"regular_{dt.hour:02d}"
 
     return {
@@ -498,11 +498,7 @@ def send_teams(current, reason):
         "정상": "🟢", "주의": "🟡", "경계": "🟠",
         "위험": "🔴", "매우위험": "🟥",
     }.get(current_level, "⚪")
-    stale_note = ""
-    if current.get("isStaleData"):
-        age = current.get("dataAgeMinutes")
-        age_text = f"{age:.1f}분" if isinstance(age, (int, float)) else "확인 필요"
-        stale_note = f"  \n⚠ 신규 실측 수집 실패로 직전 정상 관측값을 사용했습니다. 데이터 경과: {age_text}"
+    data_basis = "최근 정상 관측자료" if current.get("isStaleData") else "최신 관측자료"
 
     forecast_time_raw = str(current.get("forecastMaxTime", ""))
     forecast_time_text = f"{forecast_time_raw[:2]}:{forecast_time_raw[2:4]}" if len(forecast_time_raw) >= 4 else "-"
@@ -517,7 +513,7 @@ def send_teams(current, reason):
         {"name": "현재 단계", "value": str(current_level)},
         {"name": "현재 체감온도", "value": current_temp_text},
         {"name": "실제 관측시각", "value": str(current.get("observedAt", "-"))},
-        {"name": "자료 상태", "value": "직전 정상값 사용" if current.get("isStaleData") else "최신 실측"},
+        {"name": "자료 기준", "value": data_basis},
         {"name": "기온/습도/풍속", "value": f"{current.get('temperature', '-'):.1f}℃ / {current.get('humidity', '-'):.1f}% / {current.get('windSpeed') or '-'} m/s"},
         {"name": "예상 최고", "value": forecast_text},
         {"name": "관측지점", "value": f"{current.get('awsStationName', '-')} ({current.get('awsStation', '-')})"},
@@ -533,7 +529,7 @@ def send_teams(current, reason):
         "summary": toast_summary,
         "themeColor": level_theme,
         "title": f"{level_icon} {toast_summary}",
-        "text": f"**{reason_text}**  \n{forecast_text}{stale_note}",
+        "text": f"**{reason_text}**  \n{forecast_text}",
         "sections": [
             {
                 "activityTitle": f"온열질환 모니터링 | {current_level}",
