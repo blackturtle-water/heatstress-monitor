@@ -10,7 +10,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.6.2"
+VERSION = "v1.6.3"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -418,24 +418,34 @@ def regular_reason_hour(reason):
     return int(match.group(1)) if match else None
 
 
-def determine_notification(last_state, level, dt):
-    # 주말과 공휴일에는 정기보고와 단계변경을 포함한 모든 Teams 알림을 차단한다.
+def determine_notifications(last_state, level, dt):
+    """정기보고와 단계변경을 서로 독립적으로 판정한다."""
     if is_non_working_day(dt):
-        return False, "holiday_or_weekend"
+        return {"regularReason": None, "levelChange": False, "blockedReason": "holiday_or_weekend"}
 
     previous = last_state.get("level", "정상")
     level_changed = previous != level and level != "데이터없음"
 
-    # 평일 08~17시는 매시간 첫 실행에서 정기보고한다.
     reports = last_state.get("regularReports", {})
-    regular_due = 8 <= dt.hour <= 17 and regular_key(dt) not in reports and level != "데이터없음"
+    regular_reason = None
+    if 8 <= dt.hour <= 17 and level != "데이터없음" and regular_key(dt) not in reports:
+        regular_reason = f"regular_{dt.hour:02d}"
 
-    if regular_due and level_changed:
-        return True, f"regular_{dt.hour:02d}_level_change"
-    if regular_due:
-        return True, f"regular_{dt.hour:02d}"
-    # 평일에는 업무시간 밖이라도 단계가 바뀌면 알린다.
-    if level_changed:
+    return {
+        "regularReason": regular_reason,
+        "levelChange": level_changed,
+        "blockedReason": None,
+    }
+
+
+def determine_notification(last_state, level, dt):
+    """기존 호출 호환용. 신규 코드는 determine_notifications를 사용한다."""
+    result = determine_notifications(last_state, level, dt)
+    if result.get("blockedReason"):
+        return False, result["blockedReason"]
+    if result.get("regularReason"):
+        return True, result["regularReason"]
+    if result.get("levelChange"):
         return True, "level_change"
     return False, "none"
 
@@ -692,7 +702,7 @@ def history_has_event(observed_at, notification_reason):
                 if row.get("observedAt") != observed_at:
                     continue
                 existing_reason = row.get("notificationReason", "")
-                if notification_reason.startswith("regular_"):
+                if notification_reason.startswith("regular_") or notification_reason == "level_change":
                     if existing_reason == notification_reason:
                         return True
                 else:
@@ -762,15 +772,58 @@ def main():
             "apiMessage": short_api_message(weather.get("apiMessage", ""))
         })
     current.update({k: v for k, v in forecast.items() if k != "ok"})
-    notify, reason = determine_notification(last, current["level"], dt)
-    current["levelChanged"] = "level_change" in reason
-    current["notificationReason"] = reason
-    current["teamsNotified"] = send_teams(current, reason) if notify else False
+    decisions = determine_notifications(last, current["level"], dt)
+    regular_reason = decisions.get("regularReason")
+    level_change_due = bool(decisions.get("levelChange"))
+
+    regular_sent = send_teams(current, regular_reason) if regular_reason else False
+    level_change_sent = send_teams(current, "level_change") if level_change_due else False
+
+    current["levelChanged"] = level_change_due
+    current["regularNotificationReason"] = regular_reason or "none"
+    current["regularTeamsNotified"] = regular_sent
+    current["levelChangeNotificationReason"] = "level_change" if level_change_due else "none"
+    current["levelChangeTeamsNotified"] = level_change_sent
+    current["notificationReasons"] = [
+        reason for reason, sent in ((regular_reason, regular_sent), ("level_change" if level_change_due else None, level_change_sent))
+        if reason and sent
+    ]
+    if regular_sent and level_change_sent:
+        current["notificationReason"] = f"{regular_reason}+level_change"
+    elif regular_sent:
+        current["notificationReason"] = regular_reason
+    elif level_change_sent:
+        current["notificationReason"] = "level_change"
+    elif decisions.get("blockedReason"):
+        current["notificationReason"] = decisions["blockedReason"]
+    else:
+        current["notificationReason"] = "none"
+    current["teamsNotified"] = regular_sent or level_change_sent
+
     write_json(CURRENT_PATH, current)
     write_json(DOCS_CURRENT_PATH, current)
-    append_history(current)
+
+    # 동일한 관측값에서 두 알림이 발생해도 history.csv에는 별도 행으로 저장한다.
+    if regular_sent:
+        regular_event = dict(current)
+        regular_event["notificationReason"] = regular_reason
+        regular_event["teamsNotified"] = True
+        regular_event["levelChanged"] = False
+        append_history(regular_event)
+    if level_change_sent:
+        level_event = dict(current)
+        level_event["notificationReason"] = "level_change"
+        level_event["teamsNotified"] = True
+        level_event["levelChanged"] = True
+        append_history(level_event)
+    if not regular_sent and not level_change_sent:
+        ordinary_event = dict(current)
+        ordinary_event["notificationReason"] = decisions.get("blockedReason") or "none"
+        ordinary_event["teamsNotified"] = False
+        append_history(ordinary_event)
+
     reports = last.get("regularReports", {}) if isinstance(last.get("regularReports"), dict) else {}
-    if regular_reason_hour(reason) is not None and current["teamsNotified"]:
+    if regular_reason and regular_sent:
         reports[regular_key(dt)] = current["observedAt"]
     write_json(LAST_STATE_PATH, {"level": current["level"], "apparentTemperature": current.get("apparentTemperature"), "observedAt": current["observedAt"], "dataGeneratedAt": current.get("dataGeneratedAt"), "temperature": current.get("temperature"), "humidity": current.get("humidity"), "windSpeed": current.get("windSpeed"), "awsStation": current.get("awsStation"), "awsStationName": current.get("awsStationName"), "awsObservedTime": current.get("awsObservedTime"), "regularReports": reports})
     print(json.dumps(current, ensure_ascii=False, indent=2), flush=True)
