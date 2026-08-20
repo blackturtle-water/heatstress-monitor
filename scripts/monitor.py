@@ -10,7 +10,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.6.3"
+VERSION = "v1.6.4"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -428,7 +428,10 @@ def determine_notifications(last_state, level, dt):
 
     reports = last_state.get("regularReports", {})
     regular_reason = None
-    if 8 <= dt.hour <= 17 and level != "데이터없음" and regular_key(dt) not in reports:
+    # 매시간 00~29분 사이의 실행에서만 해당 시간 정기보고를 시도한다.
+    # Teams 전송이 실패하면 regularReports에 기록되지 않으므로 다음 10분 실행에서 다시 시도한다.
+    # 30분 이후에는 지난 정기보고를 소급 발송하거나 누락 기록을 생성하지 않는다.
+    if 8 <= dt.hour <= 17 and dt.minute < 30 and level != "데이터없음" and regular_key(dt) not in reports:
         regular_reason = f"regular_{dt.hour:02d}"
 
     return {
