@@ -10,7 +10,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.6.6"
+VERSION = "v1.6.8"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -421,29 +421,36 @@ def regular_reason_hour(reason):
 def report_target(dt):
     """현재 실행이 담당할 정기보고 목표시각을 계산한다.
 
-    매시 50분부터 다음 정시 보고 후보 구간이 시작된다.
-    예: 14:50~15:29는 15시 정기보고 구간이다.
+    각 정기보고의 우선 관측 구간은 목표시각 15분 전부터 15분 후까지다.
+    예: 14:45~15:15에 확보된 정상 관측값은 15시 정기보고에 사용한다.
+    15분까지 적합한 신규 관측값이 없으면 20분 이후 첫 실행에서
+    최근 정상 관측값으로 해당 시간의 정기보고를 진행한다.
     """
-    if dt.minute >= 50:
+    if dt.minute >= 45:
         target = (dt + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
     else:
         target = dt.replace(minute=0, second=0, microsecond=0)
     return target if 8 <= target.hour <= 17 else None
 
-
 def regular_key_for(target):
     return f"{target.strftime('%Y-%m-%d')}_{target.hour:02d}"
 
-
 def determine_notifications(last_state, level, dt, observed_at=None):
-    """정기보고와 단계변경을 독립 판정한다.
+    """정기보고와 단계변경을 서로 독립적으로 판정한다.
 
-    정기보고는 목표시각 10분 전부터 29분 후까지 처리한다.
-    목표시각 10분 전 이후의 관측값이 확보되면 즉시 보고하고,
-    목표시각 30분 이후에는 관측시각과 무관하게 최근 정상값으로 보고한다.
+    정기보고 규칙:
+    - 목표시각 -15분 ~ +15분에 관측된 정상 자료가 있으면 즉시 보고
+    - +15분까지 적합한 자료가 없으면 보류
+    - +20분 이후 첫 실행에서는 가장 최근 정상 자료로 보고
+    - Teams 전송 성공 시에만 regularReports 완료 키를 기록
     """
     if is_non_working_day(dt):
-        return {"regularReason": None, "regularKey": None, "levelChange": False, "blockedReason": "holiday_or_weekend"}
+        return {
+            "regularReason": None,
+            "regularKey": None,
+            "levelChange": False,
+            "blockedReason": "holiday_or_weekend",
+        }
 
     previous = last_state.get("level", "정상")
     level_changed = previous != level and level != "데이터없음"
@@ -454,19 +461,26 @@ def determine_notifications(last_state, level, dt, observed_at=None):
 
     if target is not None and level != "데이터없음":
         report_key = regular_key_for(target)
-        window_start = target - timedelta(minutes=10)
-        window_end = target + timedelta(minutes=30)
+        window_start = target - timedelta(minutes=15)
+        preferred_end = target + timedelta(minutes=15)
+        fallback_at = target + timedelta(minutes=20)
+
         observed_dt = None
         if observed_at:
             try:
-                observed_dt = datetime.strptime(str(observed_at)[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=KST)
+                observed_dt = datetime.strptime(
+                    str(observed_at)[:19], "%Y-%m-%d %H:%M:%S"
+                ).replace(tzinfo=KST)
             except Exception:
                 observed_dt = None
 
-        within_window = window_start <= dt < window_end
-        fresh_candidate = observed_dt is not None and observed_dt >= window_start
-        fallback_due = dt >= window_end
-        if report_key not in reports and (within_window and fresh_candidate or fallback_due):
+        fresh_candidate = (
+            observed_dt is not None
+            and window_start <= observed_dt <= preferred_end
+        )
+        fallback_due = dt >= fallback_at
+
+        if report_key not in reports and (fresh_candidate or fallback_due):
             regular_reason = f"regular_{target.hour:02d}"
             regular_key_value = report_key
 
@@ -476,7 +490,6 @@ def determine_notifications(last_state, level, dt, observed_at=None):
         "levelChange": level_changed,
         "blockedReason": None,
     }
-
 
 def determine_notification(last_state, level, dt, observed_at=None):
     """기존 호출 호환용. 신규 코드는 determine_notifications를 사용한다."""
