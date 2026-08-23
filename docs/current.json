@@ -1,8 +1,8 @@
 {
   "observedAt": "2026-08-23 19:18:00",
   "dataObservedAt": "2026-08-23 19:18:00",
-  "dataGeneratedAt": "2026-08-23 20:22:57",
-  "dataAgeMinutes": 65.0,
+  "dataGeneratedAt": "2026-08-23 21:45:31",
+  "dataAgeMinutes": 147.5,
   "isStaleData": true,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
@@ -17,30 +17,9 @@
   "previousLevel": "주의",
   "apiStatus": "STALE_DATA",
   "apiMessage": "실측 API 조회가 제한시간을 초과해 마지막 정상 관측값을 표시 중입니다.",
-  "forecastStatus": "HTTP_ERROR",
-  "forecastMessage": "HTTP_ERROR: <urlopen error timed out>",
+  "forecastStatus": "OK",
+  "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "1800",
-      "temperature": 30.0,
-      "humidity": 75.0,
-      "apparentTemperature": 31.7,
-      "level": "주의"
-    },
-    {
-      "time": "1900",
-      "temperature": 29.0,
-      "humidity": 80.0,
-      "apparentTemperature": 31.1,
-      "level": "주의"
-    },
-    {
-      "time": "2000",
-      "temperature": 28.0,
-      "humidity": 85.0,
-      "apparentTemperature": 30.4,
-      "level": "정상"
-    },
     {
       "time": "2100",
       "temperature": 28.0,
@@ -63,11 +42,11 @@
       "level": "정상"
     }
   ],
-  "forecastMaxApparentTemperature": 31.7,
-  "forecastMaxTime": "1800",
-  "forecastMaxLevel": "주의",
-  "forecastMaxTemperature": 30.0,
-  "forecastMaxHumidity": 75.0,
+  "forecastMaxApparentTemperature": 30.4,
+  "forecastMaxTime": "2100",
+  "forecastMaxLevel": "정상",
+  "forecastMaxTemperature": 28.0,
+  "forecastMaxHumidity": 85.0,
   "forecastBaseDate": "20260823",
   "forecastBaseTime": "2000",
   "forecastNx": "102",
@@ -81,5 +60,6 @@
   "levelChangeTeamsNotified": false,
   "notificationReasons": [],
   "notificationReason": "holiday_or_weekend",
-  "teamsNotified": false
+  "teamsNotified": false,
+  "forecastFormula": "KOSHA_TABLE_INTERPOLATION"
 }
