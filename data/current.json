@@ -1,8 +1,8 @@
 {
   "observedAt": "2026-08-24 12:06:00",
   "dataObservedAt": "2026-08-24 12:06:00",
-  "dataGeneratedAt": "2026-08-24 13:56:36",
-  "dataAgeMinutes": 110.6,
+  "dataGeneratedAt": "2026-08-24 14:31:45",
+  "dataAgeMinutes": 145.8,
   "isStaleData": true,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
@@ -20,15 +20,17 @@
   "forecastStatus": "HTTP_ERROR",
   "forecastMessage": "HTTP_ERROR: <urlopen error timed out>",
   "forecastBaseDate": "20260824",
-  "forecastBaseTime": "1100",
+  "forecastBaseTime": "1400",
   "forecastNx": "102",
   "forecastNy": "83",
   "levelChanged": false,
-  "regularNotificationReason": "none",
-  "regularTeamsNotified": false,
+  "regularNotificationReason": "regular_14",
+  "regularTeamsNotified": true,
   "levelChangeNotificationReason": "none",
   "levelChangeTeamsNotified": false,
-  "notificationReasons": [],
-  "notificationReason": "none",
-  "teamsNotified": false
+  "notificationReasons": [
+    "regular_14"
+  ],
+  "notificationReason": "regular_14",
+  "teamsNotified": true
 }
