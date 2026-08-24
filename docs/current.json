@@ -1,8 +1,8 @@
 {
   "observedAt": "2026-08-24 11:01:00",
   "dataObservedAt": "2026-08-24 11:01:00",
-  "dataGeneratedAt": "2026-08-24 11:09:15",
-  "dataAgeMinutes": 8.3,
+  "dataGeneratedAt": "2026-08-24 11:09:42",
+  "dataAgeMinutes": 8.7,
   "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
@@ -14,138 +14,21 @@
   "humidity": 73.3,
   "windSpeed": 1.0,
   "level": "주의",
-  "previousLevel": "경계",
+  "previousLevel": "주의",
   "apiStatus": "OK",
   "apiMessage": "",
-  "forecastStatus": "OK",
-  "forecastMessage": "",
-  "forecastItems": [
-    {
-      "time": "0900",
-      "temperature": 31.0,
-      "humidity": 65.0,
-      "apparentTemperature": 31.9,
-      "level": "주의"
-    },
-    {
-      "time": "1000",
-      "temperature": 32.0,
-      "humidity": 60.0,
-      "apparentTemperature": 32.4,
-      "level": "주의"
-    },
-    {
-      "time": "1100",
-      "temperature": 33.0,
-      "humidity": 60.0,
-      "apparentTemperature": 33.5,
-      "level": "경계"
-    },
-    {
-      "time": "1200",
-      "temperature": 33.0,
-      "humidity": 55.0,
-      "apparentTemperature": 33.0,
-      "level": "경계"
-    },
-    {
-      "time": "1300",
-      "temperature": 34.0,
-      "humidity": 55.0,
-      "apparentTemperature": 34.0,
-      "level": "경계"
-    },
-    {
-      "time": "1400",
-      "temperature": 34.0,
-      "humidity": 55.0,
-      "apparentTemperature": 34.0,
-      "level": "경계"
-    },
-    {
-      "time": "1500",
-      "temperature": 34.0,
-      "humidity": 60.0,
-      "apparentTemperature": 34.5,
-      "level": "경계"
-    },
-    {
-      "time": "1600",
-      "temperature": 33.0,
-      "humidity": 60.0,
-      "apparentTemperature": 33.5,
-      "level": "경계"
-    },
-    {
-      "time": "1700",
-      "temperature": 32.0,
-      "humidity": 65.0,
-      "apparentTemperature": 32.9,
-      "level": "주의"
-    },
-    {
-      "time": "1800",
-      "temperature": 31.0,
-      "humidity": 70.0,
-      "apparentTemperature": 32.3,
-      "level": "주의"
-    },
-    {
-      "time": "1900",
-      "temperature": 30.0,
-      "humidity": 75.0,
-      "apparentTemperature": 31.7,
-      "level": "주의"
-    },
-    {
-      "time": "2000",
-      "temperature": 29.0,
-      "humidity": 75.0,
-      "apparentTemperature": 30.7,
-      "level": "정상"
-    },
-    {
-      "time": "2100",
-      "temperature": 28.0,
-      "humidity": 80.0,
-      "apparentTemperature": 30.0,
-      "level": "정상"
-    },
-    {
-      "time": "2200",
-      "temperature": 28.0,
-      "humidity": 80.0,
-      "apparentTemperature": 30.0,
-      "level": "정상"
-    },
-    {
-      "time": "2300",
-      "temperature": 27.0,
-      "humidity": 85.0,
-      "apparentTemperature": 29.4,
-      "level": "정상"
-    }
-  ],
-  "forecastMaxApparentTemperature": 34.5,
-  "forecastMaxTime": "1500",
-  "forecastMaxLevel": "경계",
-  "forecastMaxTemperature": 34.0,
-  "forecastMaxHumidity": 60.0,
+  "forecastStatus": "HTTP_ERROR",
+  "forecastMessage": "HTTP_ERROR: The read operation timed out",
   "forecastBaseDate": "20260824",
   "forecastBaseTime": "0800",
   "forecastNx": "102",
   "forecastNy": "83",
-  "forecastGridName": "울산 남구",
-  "forecastSource": "CACHE",
-  "levelChanged": true,
-  "regularNotificationReason": "regular_11",
-  "regularTeamsNotified": true,
-  "levelChangeNotificationReason": "level_change",
-  "levelChangeTeamsNotified": true,
-  "notificationReasons": [
-    "regular_11",
-    "level_change"
-  ],
-  "notificationReason": "regular_11+level_change",
-  "teamsNotified": true
+  "levelChanged": false,
+  "regularNotificationReason": "none",
+  "regularTeamsNotified": false,
+  "levelChangeNotificationReason": "none",
+  "levelChangeTeamsNotified": false,
+  "notificationReasons": [],
+  "notificationReason": "none",
+  "teamsNotified": false
 }
