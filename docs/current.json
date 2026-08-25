@@ -1,18 +1,18 @@
 {
-  "observedAt": "2026-08-25 14:00:00",
-  "dataObservedAt": "2026-08-25 14:00:00",
-  "dataGeneratedAt": "2026-08-25 14:08:15",
-  "dataAgeMinutes": 8.3,
+  "observedAt": "2026-08-25 14:35:00",
+  "dataObservedAt": "2026-08-25 14:35:00",
+  "dataGeneratedAt": "2026-08-25 14:43:36",
+  "dataAgeMinutes": 8.6,
   "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202608251400",
+  "awsObservedTime": "202608251435",
   "apparentTemperature": 33.3,
-  "temperature": 32.3,
-  "humidity": 65.9,
-  "windSpeed": 1.0,
+  "temperature": 32.2,
+  "humidity": 67.1,
+  "windSpeed": 0.8,
   "level": "경계",
   "previousLevel": "경계",
   "apiStatus": "OK",
@@ -20,27 +20,6 @@
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "1200",
-      "temperature": 33.0,
-      "humidity": 55.0,
-      "apparentTemperature": 33.0,
-      "level": "경계"
-    },
-    {
-      "time": "1300",
-      "temperature": 33.0,
-      "humidity": 55.0,
-      "apparentTemperature": 33.0,
-      "level": "경계"
-    },
-    {
-      "time": "1400",
-      "temperature": 33.0,
-      "humidity": 60.0,
-      "apparentTemperature": 33.5,
-      "level": "경계"
-    },
     {
       "time": "1500",
       "temperature": 33.0,
@@ -111,19 +90,17 @@
   "forecastMaxTemperature": 33.0,
   "forecastMaxHumidity": 65.0,
   "forecastBaseDate": "20260825",
-  "forecastBaseTime": "1100",
+  "forecastBaseTime": "1400",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
-  "forecastSource": "CACHE",
+  "forecastFormula": "KOSHA_TABLE_INTERPOLATION",
   "levelChanged": false,
-  "regularNotificationReason": "regular_14",
-  "regularTeamsNotified": true,
+  "regularNotificationReason": "none",
+  "regularTeamsNotified": false,
   "levelChangeNotificationReason": "none",
   "levelChangeTeamsNotified": false,
-  "notificationReasons": [
-    "regular_14"
-  ],
-  "notificationReason": "regular_14",
-  "teamsNotified": true
+  "notificationReasons": [],
+  "notificationReason": "none",
+  "teamsNotified": false
 }
