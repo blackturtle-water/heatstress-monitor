@@ -1,46 +1,25 @@
 {
-  "observedAt": "2026-08-26 13:44:00",
-  "dataObservedAt": "2026-08-26 13:44:00",
-  "dataGeneratedAt": "2026-08-26 14:22:44",
-  "dataAgeMinutes": 38.7,
-  "isStaleData": true,
+  "observedAt": "2026-08-26 14:48:00",
+  "dataObservedAt": "2026-08-26 14:48:00",
+  "dataGeneratedAt": "2026-08-26 14:56:30",
+  "dataAgeMinutes": 8.5,
+  "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202608261344",
-  "apparentTemperature": 33.5,
-  "temperature": 32.1,
-  "humidity": 70.8,
-  "windSpeed": 0.8,
+  "awsObservedTime": "202608261448",
+  "apparentTemperature": 33.6,
+  "temperature": 32.4,
+  "humidity": 69.3,
+  "windSpeed": 0.9,
   "level": "경계",
   "previousLevel": "경계",
-  "apiStatus": "STALE_DATA",
-  "apiMessage": "실측 API 조회가 제한시간을 초과해 마지막 정상 관측값을 표시 중입니다.",
+  "apiStatus": "OK",
+  "apiMessage": "",
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "1200",
-      "temperature": 33.0,
-      "humidity": 55.0,
-      "apparentTemperature": 33.0,
-      "level": "경계"
-    },
-    {
-      "time": "1300",
-      "temperature": 33.0,
-      "humidity": 50.0,
-      "apparentTemperature": 32.5,
-      "level": "주의"
-    },
-    {
-      "time": "1400",
-      "temperature": 33.0,
-      "humidity": 45.0,
-      "apparentTemperature": 32.0,
-      "level": "주의"
-    },
     {
       "time": "1500",
       "temperature": 33.0,
@@ -105,26 +84,25 @@
       "level": "정상"
     }
   ],
-  "forecastMaxApparentTemperature": 33.0,
-  "forecastMaxTime": "1200",
-  "forecastMaxLevel": "경계",
+  "forecastMaxApparentTemperature": 32.5,
+  "forecastMaxTime": "1500",
+  "forecastMaxLevel": "주의",
   "forecastMaxTemperature": 33.0,
-  "forecastMaxHumidity": 55.0,
+  "forecastMaxHumidity": 50.0,
   "forecastBaseDate": "20260826",
-  "forecastBaseTime": "1100",
+  "forecastBaseTime": "1400",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
   "forecastFormula": "KOSHA_TABLE_INTERPOLATION",
   "levelChanged": false,
-  "regularNotificationReason": "regular_14",
+  "regularNotificationReason": "regular_15",
   "regularTeamsNotified": true,
   "levelChangeNotificationReason": "none",
   "levelChangeTeamsNotified": false,
   "notificationReasons": [
-    "regular_14"
+    "regular_15"
   ],
-  "notificationReason": "regular_14",
-  "teamsNotified": true,
-  "forecastSource": "CACHE"
+  "notificationReason": "regular_15",
+  "teamsNotified": true
 }
