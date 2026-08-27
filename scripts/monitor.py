@@ -426,7 +426,7 @@ def report_target(dt):
     15분까지 적합한 신규 관측값이 없으면 20분 이후 첫 실행에서
     최근 정상 관측값으로 해당 시간의 정기보고를 진행한다.
     """
-    if dt.minute >= 40:
+    if dt.minute >= 45:
         target = (dt + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
     else:
         target = dt.replace(minute=0, second=0, microsecond=0)
@@ -461,9 +461,9 @@ def determine_notifications(last_state, level, dt, observed_at=None):
 
     if target is not None and level != "데이터없음":
         report_key = regular_key_for(target)
-        window_start = target - timedelta(minutes=20)
-        preferred_end = target + timedelta(minutes=20)
-        fallback_at = target + timedelta(minutes=22)
+        window_start = target - timedelta(minutes=15)
+        preferred_end = target + timedelta(minutes=15)
+        fallback_at = target + timedelta(minutes=20)
 
         observed_dt = None
         if observed_at:
@@ -479,17 +479,7 @@ def determine_notifications(last_state, level, dt, observed_at=None):
             and window_start <= observed_dt <= preferred_end
         )
         fallback_due = dt >= fallback_at
-print(
-f"[REGULAR] "
-f"target={target} "
-f"report_key={report_key} "
-f"observed={observed_dt} "
-f"window={window_start}~{preferred_end} "
-f"fresh={fresh_candidate} "
-f"fallback={fallback_due} "
-f"exists={report_key in reports}",
-flush=True
-)
+
         if report_key not in reports and (fresh_candidate or fallback_due):
             regular_reason = f"regular_{target.hour:02d}"
             regular_key_value = report_key
@@ -882,7 +872,7 @@ def main():
         append_history(ordinary_event)
 
     reports = last.get("regularReports", {}) if isinstance(last.get("regularReports"), dict) else {}
-    if regular_reason and decisions.get("regularKey"):
+    if regular_reason and regular_sent and decisions.get("regularKey"):
         reports[decisions["regularKey"]] = current["observedAt"]
     write_json(LAST_STATE_PATH, {"level": current["level"], "apparentTemperature": current.get("apparentTemperature"), "observedAt": current["observedAt"], "dataGeneratedAt": current.get("dataGeneratedAt"), "temperature": current.get("temperature"), "humidity": current.get("humidity"), "windSpeed": current.get("windSpeed"), "awsStation": current.get("awsStation"), "awsStationName": current.get("awsStationName"), "awsObservedTime": current.get("awsObservedTime"), "regularReports": reports})
     print(json.dumps(current, ensure_ascii=False, indent=2), flush=True)
