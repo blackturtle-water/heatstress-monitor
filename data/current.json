@@ -1,67 +1,25 @@
 {
-  "observedAt": "2026-08-27 06:38:00",
-  "dataObservedAt": "2026-08-27 06:38:00",
-  "dataGeneratedAt": "2026-08-27 12:00:06",
-  "dataAgeMinutes": 322.1,
-  "isStaleData": true,
+  "observedAt": "2026-08-27 12:59:00",
+  "dataObservedAt": "2026-08-27 12:59:00",
+  "dataGeneratedAt": "2026-08-27 13:07:43",
+  "dataAgeMinutes": 8.7,
+  "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202608270638",
-  "apparentTemperature": 30.8,
-  "temperature": 28.4,
-  "humidity": 84.4,
-  "windSpeed": 0.3,
-  "level": "정상",
+  "awsObservedTime": "202608271259",
+  "apparentTemperature": 32.6,
+  "temperature": 31.0,
+  "humidity": 74.2,
+  "windSpeed": 1.1,
+  "level": "주의",
   "previousLevel": "정상",
-  "apiStatus": "STALE_DATA",
-  "apiMessage": "실측 API 조회가 제한시간을 초과해 마지막 정상 관측값을 표시 중입니다.",
+  "apiStatus": "OK",
+  "apiMessage": "",
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "0600",
-      "temperature": 25.0,
-      "humidity": 95.0,
-      "apparentTemperature": 28.0,
-      "level": "정상"
-    },
-    {
-      "time": "0700",
-      "temperature": 26.0,
-      "humidity": 95.0,
-      "apparentTemperature": 29.1,
-      "level": "정상"
-    },
-    {
-      "time": "0800",
-      "temperature": 27.0,
-      "humidity": 90.0,
-      "apparentTemperature": 29.7,
-      "level": "정상"
-    },
-    {
-      "time": "0900",
-      "temperature": 29.0,
-      "humidity": 85.0,
-      "apparentTemperature": 31.4,
-      "level": "주의"
-    },
-    {
-      "time": "1000",
-      "temperature": 29.0,
-      "humidity": 80.0,
-      "apparentTemperature": 31.1,
-      "level": "주의"
-    },
-    {
-      "time": "1100",
-      "temperature": 30.0,
-      "humidity": 75.0,
-      "apparentTemperature": 31.7,
-      "level": "주의"
-    },
     {
       "time": "1200",
       "temperature": 31.0,
@@ -153,18 +111,20 @@
   "forecastMaxTemperature": 31.0,
   "forecastMaxHumidity": 70.0,
   "forecastBaseDate": "20260827",
-  "forecastBaseTime": "0500",
+  "forecastBaseTime": "1100",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
   "forecastFormula": "KOSHA_TABLE_INTERPOLATION",
-  "levelChanged": false,
-  "regularNotificationReason": "none",
-  "regularTeamsNotified": false,
-  "levelChangeNotificationReason": "none",
-  "levelChangeTeamsNotified": false,
-  "notificationReasons": [],
-  "notificationReason": "none",
-  "teamsNotified": false,
-  "forecastSource": "CACHE"
+  "levelChanged": true,
+  "regularNotificationReason": "regular_13",
+  "regularTeamsNotified": true,
+  "levelChangeNotificationReason": "level_change",
+  "levelChangeTeamsNotified": true,
+  "notificationReasons": [
+    "regular_13",
+    "level_change"
+  ],
+  "notificationReason": "regular_13+level_change",
+  "teamsNotified": true
 }
