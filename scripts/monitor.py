@@ -426,7 +426,7 @@ def report_target(dt):
     15분까지 적합한 신규 관측값이 없으면 20분 이후 첫 실행에서
     최근 정상 관측값으로 해당 시간의 정기보고를 진행한다.
     """
-    if dt.minute >= 45:
+    if dt.minute >= 40:
         target = (dt + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
     else:
         target = dt.replace(minute=0, second=0, microsecond=0)
@@ -461,9 +461,9 @@ def determine_notifications(last_state, level, dt, observed_at=None):
 
     if target is not None and level != "데이터없음":
         report_key = regular_key_for(target)
-        window_start = target - timedelta(minutes=15)
-        preferred_end = target + timedelta(minutes=15)
-        fallback_at = target + timedelta(minutes=20)
+        window_start = target - timedelta(minutes=20)
+        preferred_end = target + timedelta(minutes=20)
+        fallback_at = target + timedelta(minutes=22)
 
         observed_dt = None
         if observed_at:
