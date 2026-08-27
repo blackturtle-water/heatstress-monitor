@@ -2,15 +2,11 @@ name: Heat Stress Monitor
 
 on:
   schedule:
-    # GitHub Actions cron is UTC.
-    # Work time collection: KST 08:00~17:50 every 10 minutes. The first run of each hour sends the hourly report.
-    # KST 08:00~08:50 = UTC 23:00~23:50 previous day
-    # KST 09:00~17:50 = UTC 00:00~08:50
-    - cron: "*/10 23,0-8 * * *"
-
-    # Off-hours collection: KST 18:05~07:05 once per hour. Weekday level changes notify Teams; weekends/holidays do not.
-    - cron: "5 9-22 * * *"
-
+    # GitHub Actions cron uses UTC.
+    # KST 08:03-17:53, every 10 minutes at 03, 13, 23, 33, 43, 53.
+    - cron: "3,13,23,33,43,53 23,0-8 * * *"
+    # KST 18:03-07:03, once per hour at minute 03.
+    - cron: "3 9-22 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -34,7 +30,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Run heat stress monitor
         env:
@@ -42,63 +38,39 @@ jobs:
           KMA_FORECAST_SERVICE_KEY: ${{ secrets.KMA_FORECAST_SERVICE_KEY }}
           KMA_VILAGE_FCST_AUTH_KEY: ${{ secrets.KMA_VILAGE_FCST_AUTH_KEY }}
           TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
-          DASHBOARD_URL: "https://blackturtle-water.github.io/heatstress-monitor/"
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL }}
+          HOLIDAY_SERVICE_KEY: ${{ secrets.HOLIDAY_SERVICE_KEY }}
         run: |
           set -e
           echo "=== Start heat stress monitor ==="
-          python -u scripts/monitor.py
+          python scripts/monitor.py
           echo "=== Finished heat stress monitor ==="
 
-      - name: Copy dashboard data
+      - name: Sync dashboard data
         run: |
+          set -e
           mkdir -p docs
-
-          if [ -f data/current.json ]; then
-            cp data/current.json docs/current.json
-            echo "Copied data/current.json to docs/current.json"
-          else
-            echo "data/current.json not found"
-          fi
-
-          if [ -f data/last_state.json ]; then
-            cp data/last_state.json docs/last_state.json
-            echo "Copied data/last_state.json to docs/last_state.json"
-          else
-            echo "data/last_state.json not found"
-          fi
-
-          if [ -f data/history.csv ]; then
-            cp data/history.csv docs/history.csv
-            echo "Copied data/history.csv to docs/history.csv"
-          else
-            echo "data/history.csv not found"
-          fi
+          cp data/current.json docs/current.json
+          cp data/last_state.json docs/last_state.json
+          cp data/history.csv docs/history.csv
 
       - name: Show current status file
         run: |
           echo "=== data/current.json ==="
-          if [ -f data/current.json ]; then
-            cat data/current.json
-          else
-            echo "data/current.json not found"
-          fi
-          echo ""
+          cat data/current.json
           echo "=== data/last_state.json ==="
-          if [ -f data/last_state.json ]; then
-            cat data/last_state.json
-          else
-            echo "data/last_state.json not found"
-          fi
+          cat data/last_state.json
 
       - name: Commit updated dashboard data
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
-          git add data docs
+          git add data/current.json data/last_state.json data/history.csv docs/current.json docs/last_state.json docs/history.csv
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
             git commit -m "Update heat stress monitoring data"
-            git push
+            git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
