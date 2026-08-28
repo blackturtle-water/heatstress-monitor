@@ -463,7 +463,7 @@ def determine_notifications(last_state, level, dt, observed_at=None):
         report_key = regular_key_for(target)
         window_start = target - timedelta(minutes=10)
         preferred_end = target + timedelta(minutes=10)
-        fallback_at = target + timedelta(minutes=15)
+        fallback_at = target + timedelta(minutes=12)
 
         observed_dt = None
         if observed_at:
