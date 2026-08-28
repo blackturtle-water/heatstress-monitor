@@ -1,12 +1,6 @@
 name: Heat Stress Monitor
 
 on:
-  schedule:
-    # GitHub Actions cron uses UTC.
-    # KST 08:03-17:53, every 10 minutes at 03, 13, 23, 33, 43, 53.
-    - cron: "3,13,23,33,43,53 23,0-8 * * *"
-    # KST 18:03-07:03, once per hour at minute 03.
-    - cron: "3 9-22 * * *"
   workflow_dispatch:
 
 concurrency:
