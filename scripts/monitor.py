@@ -10,7 +10,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.6.8"
+VERSION = "v1.6.9"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -421,9 +421,9 @@ def regular_reason_hour(reason):
 def report_target(dt):
     """현재 실행이 담당할 정기보고 목표시각을 계산한다.
 
-    각 정기보고의 우선 관측 구간은 목표시각 20분 전부터 20분 후까지다.
-    예: 14:40~15:20에 확보된 정상 관측값은 15시 정기보고에 사용한다.
-    20분까지 적합한 신규 관측값이 없으면 22분 이후 첫 실행에서
+    각 정기보고의 우선 관측 구간은 목표시각 10분 전부터 10분 후까지다.
+    예: 14:50~15:10에 확보된 정상 관측값은 15시 정기보고에 사용한다.
+    10분까지 적합한 신규 관측값이 없으면 15분 이후 첫 실행에서
     최근 정상 관측값으로 해당 시간의 정기보고를 진행한다.
     """
     if dt.minute >= 40:
@@ -439,9 +439,9 @@ def determine_notifications(last_state, level, dt, observed_at=None):
     """정기보고와 단계변경을 서로 독립적으로 판정한다.
 
     정기보고 규칙:
-    - 목표시각 -15분 ~ +15분에 관측된 정상 자료가 있으면 즉시 보고
-    - +15분까지 적합한 자료가 없으면 보류
-    - +20분 이후 첫 실행에서는 가장 최근 정상 자료로 보고
+    - 목표시각 -10분 ~ +10분에 관측된 정상 자료가 있으면 즉시 보고
+    - +10분까지 적합한 자료가 없으면 보류
+    - +15분 이후 첫 실행에서는 가장 최근 정상 자료로 보고
     - Teams 전송 성공 시에만 regularReports 완료 키를 기록
     """
     if is_non_working_day(dt):
@@ -461,9 +461,9 @@ def determine_notifications(last_state, level, dt, observed_at=None):
 
     if target is not None and level != "데이터없음":
         report_key = regular_key_for(target)
-        window_start = target - timedelta(minutes=20)
-        preferred_end = target + timedelta(minutes=20)
-        fallback_at = target + timedelta(minutes=22)
+        window_start = target - timedelta(minutes=10)
+        preferred_end = target + timedelta(minutes=10)
+        fallback_at = target + timedelta(minutes=15)
 
         observed_dt = None
         if observed_at:
