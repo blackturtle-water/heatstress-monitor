@@ -10,7 +10,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.6.9"
+VERSION = "v1.7.0"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -438,8 +438,8 @@ def regular_key_for(target):
 def determine_notifications(last_state, level, dt, observed_at=None):
     """정기보고와 단계변경을 서로 독립적으로 판정한다.
 
-    정기보고 규칙:
-    - 목표시각 -10분 ~ +10분에 관측된 정상 자료가 있으면 즉시 보고
+    정기보고 규칙(평일 오전 8시 1회):
+    - 08시 기준 -10분 ~ +10분에 관측된 정상 자료가 있으면 즉시 보고
     - +10분까지 적합한 자료가 없으면 보류
     - +15분 이후 첫 실행에서는 가장 최근 정상 자료로 보고
     - Teams 전송 성공 시에만 regularReports 완료 키를 기록
@@ -453,9 +453,22 @@ def determine_notifications(last_state, level, dt, observed_at=None):
         }
 
     previous = last_state.get("level", "정상")
-    level_changed = previous != level and level != "데이터없음"
+    # Teams 단계변경 알림 정책:
+    # 정상<->주의 변화는 알림하지 않는다.
+    # 이전 또는 현재 단계가 경계 이상일 때만 단계변경을 알린다.
+    level_rank = {"정상": 0, "주의": 1, "경계": 2, "위험": 3, "매우위험": 4}
+    previous_rank = level_rank.get(previous, -1)
+    current_rank = level_rank.get(level, -1)
+    level_changed = (
+        previous != level
+        and level != "데이터없음"
+        and max(previous_rank, current_rank) >= level_rank["경계"]
+    )
     reports = last_state.get("regularReports", {})
-    target = report_target(dt)
+    # 정기보고는 평일 오전 8시 1회만 운영한다.
+    target = dt.replace(hour=8, minute=0, second=0, microsecond=0)
+    if dt.hour != 8:
+        target = None
     regular_reason = None
     regular_key_value = None
 
