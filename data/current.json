@@ -1,46 +1,25 @@
 {
-  "observedAt": "2026-09-06 01:52:00",
-  "dataObservedAt": "2026-09-06 01:52:00",
-  "dataGeneratedAt": "2026-09-06 02:15:19",
-  "dataAgeMinutes": 23.3,
-  "isStaleData": true,
+  "observedAt": "2026-09-06 02:22:00",
+  "dataObservedAt": "2026-09-06 02:22:00",
+  "dataGeneratedAt": "2026-09-06 02:30:28",
+  "dataAgeMinutes": 8.5,
+  "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202609060152",
-  "apparentTemperature": 26.7,
-  "temperature": 25.7,
-  "humidity": 66.2,
-  "windSpeed": 2.4,
+  "awsObservedTime": "202609060222",
+  "apparentTemperature": 26.8,
+  "temperature": 26.0,
+  "humidity": 63.4,
+  "windSpeed": 3.1,
   "level": "정상",
   "previousLevel": "정상",
-  "apiStatus": "STALE_DATA",
-  "apiMessage": "실측 API 조회가 제한시간을 초과해 마지막 정상 관측값을 표시 중입니다.",
+  "apiStatus": "OK",
+  "apiMessage": "",
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "0000",
-      "temperature": 24.0,
-      "humidity": 75.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
-    {
-      "time": "0100",
-      "temperature": 23.0,
-      "humidity": 75.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
-    {
-      "time": "0200",
-      "temperature": 23.0,
-      "humidity": 75.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
     {
       "time": "0300",
       "temperature": 23.0,
@@ -194,8 +173,8 @@
   "forecastMaxLevel": "정상",
   "forecastMaxTemperature": 27.0,
   "forecastMaxHumidity": 65.0,
-  "forecastBaseDate": "20260905",
-  "forecastBaseTime": "2300",
+  "forecastBaseDate": "20260906",
+  "forecastBaseTime": "0200",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
@@ -207,6 +186,5 @@
   "levelChangeTeamsNotified": false,
   "notificationReasons": [],
   "notificationReason": "holiday_or_weekend",
-  "teamsNotified": false,
-  "forecastSource": "CACHE"
+  "teamsNotified": false
 }
