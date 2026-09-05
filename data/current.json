@@ -1,17 +1,17 @@
 {
-  "observedAt": "2026-09-06 04:52:00",
-  "dataObservedAt": "2026-09-06 04:52:00",
-  "dataGeneratedAt": "2026-09-06 05:00:32",
-  "dataAgeMinutes": 8.5,
+  "observedAt": "2026-09-06 05:07:00",
+  "dataObservedAt": "2026-09-06 05:07:00",
+  "dataGeneratedAt": "2026-09-06 05:15:21",
+  "dataAgeMinutes": 8.4,
   "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202609060452",
-  "apparentTemperature": 26.1,
-  "temperature": 25.5,
-  "humidity": 61.1,
+  "awsObservedTime": "202609060507",
+  "apparentTemperature": 26.2,
+  "temperature": 25.4,
+  "humidity": 63.8,
   "windSpeed": 3.1,
   "level": "정상",
   "previousLevel": "정상",
@@ -21,73 +21,52 @@
   "forecastMessage": "",
   "forecastItems": [
     {
-      "time": "0300",
-      "temperature": 23.0,
-      "humidity": 75.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
-    {
-      "time": "0400",
-      "temperature": 23.0,
-      "humidity": 75.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
-    {
-      "time": "0500",
-      "temperature": 23.0,
-      "humidity": 75.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
-    {
       "time": "0600",
-      "temperature": 23.0,
-      "humidity": 75.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
-    {
-      "time": "0700",
-      "temperature": 23.0,
-      "humidity": 75.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
-    {
-      "time": "0800",
-      "temperature": 24.0,
+      "temperature": 22.0,
       "humidity": 70.0,
       "apparentTemperature": 26.2,
       "level": "정상"
     },
     {
-      "time": "0900",
-      "temperature": 25.0,
+      "time": "0700",
+      "temperature": 23.0,
+      "humidity": 70.0,
+      "apparentTemperature": 26.2,
+      "level": "정상"
+    },
+    {
+      "time": "0800",
+      "temperature": 24.0,
       "humidity": 65.0,
       "apparentTemperature": 25.9,
       "level": "정상"
     },
     {
+      "time": "0900",
+      "temperature": 25.0,
+      "humidity": 60.0,
+      "apparentTemperature": 25.5,
+      "level": "정상"
+    },
+    {
       "time": "1000",
       "temperature": 26.0,
-      "humidity": 65.0,
-      "apparentTemperature": 26.9,
+      "humidity": 60.0,
+      "apparentTemperature": 26.5,
       "level": "정상"
     },
     {
       "time": "1100",
       "temperature": 26.0,
-      "humidity": 65.0,
-      "apparentTemperature": 26.9,
+      "humidity": 60.0,
+      "apparentTemperature": 26.5,
       "level": "정상"
     },
     {
       "time": "1200",
       "temperature": 27.0,
-      "humidity": 65.0,
-      "apparentTemperature": 27.9,
+      "humidity": 60.0,
+      "apparentTemperature": 27.5,
       "level": "정상"
     },
     {
@@ -107,22 +86,22 @@
     {
       "time": "1500",
       "temperature": 27.0,
-      "humidity": 60.0,
-      "apparentTemperature": 27.5,
-      "level": "정상"
-    },
-    {
-      "time": "1600",
-      "temperature": 27.0,
       "humidity": 65.0,
       "apparentTemperature": 27.9,
       "level": "정상"
     },
     {
+      "time": "1600",
+      "temperature": 26.0,
+      "humidity": 65.0,
+      "apparentTemperature": 26.9,
+      "level": "정상"
+    },
+    {
       "time": "1700",
       "temperature": 25.0,
-      "humidity": 70.0,
-      "apparentTemperature": 26.2,
+      "humidity": 65.0,
+      "apparentTemperature": 25.9,
       "level": "정상"
     },
     {
@@ -169,16 +148,16 @@
     }
   ],
   "forecastMaxApparentTemperature": 27.9,
-  "forecastMaxTime": "1200",
+  "forecastMaxTime": "1500",
   "forecastMaxLevel": "정상",
   "forecastMaxTemperature": 27.0,
   "forecastMaxHumidity": 65.0,
   "forecastBaseDate": "20260906",
-  "forecastBaseTime": "0200",
+  "forecastBaseTime": "0500",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
-  "forecastSource": "CACHE",
+  "forecastFormula": "KOSHA_TABLE_INTERPOLATION",
   "levelChanged": false,
   "regularNotificationReason": "none",
   "regularTeamsNotified": false,
