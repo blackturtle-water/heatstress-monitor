@@ -1,46 +1,25 @@
 {
-  "observedAt": "2026-09-07 04:22:00",
-  "dataObservedAt": "2026-09-07 04:22:00",
-  "dataGeneratedAt": "2026-09-07 05:00:33",
-  "dataAgeMinutes": 38.6,
-  "isStaleData": true,
+  "observedAt": "2026-09-07 05:07:00",
+  "dataObservedAt": "2026-09-07 05:07:00",
+  "dataGeneratedAt": "2026-09-07 05:15:20",
+  "dataAgeMinutes": 8.3,
+  "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202609070422",
-  "apparentTemperature": 27.8,
-  "temperature": 22.2,
-  "humidity": 92.4,
-  "windSpeed": 2.6,
+  "awsObservedTime": "202609070507",
+  "apparentTemperature": 27.6,
+  "temperature": 22.5,
+  "humidity": 88.9,
+  "windSpeed": 3.5,
   "level": "정상",
   "previousLevel": "정상",
-  "apiStatus": "STALE_DATA",
-  "apiMessage": "실측 API 조회가 제한시간을 초과해 마지막 정상 관측값을 표시 중입니다.",
-  "forecastStatus": "HTTP_ERROR",
-  "forecastMessage": "HTTP_ERROR: <urlopen error timed out>",
+  "apiStatus": "OK",
+  "apiMessage": "",
+  "forecastStatus": "OK",
+  "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "0300",
-      "temperature": 23.0,
-      "humidity": 70.0,
-      "apparentTemperature": 26.2,
-      "level": "정상"
-    },
-    {
-      "time": "0400",
-      "temperature": 23.0,
-      "humidity": 70.0,
-      "apparentTemperature": 26.2,
-      "level": "정상"
-    },
-    {
-      "time": "0500",
-      "temperature": 23.0,
-      "humidity": 70.0,
-      "apparentTemperature": 26.2,
-      "level": "정상"
-    },
     {
       "time": "0600",
       "temperature": 23.0,
@@ -58,8 +37,8 @@
     {
       "time": "0800",
       "temperature": 24.0,
-      "humidity": 70.0,
-      "apparentTemperature": 26.2,
+      "humidity": 65.0,
+      "apparentTemperature": 25.9,
       "level": "정상"
     },
     {
@@ -86,8 +65,8 @@
     {
       "time": "1200",
       "temperature": 27.0,
-      "humidity": 60.0,
-      "apparentTemperature": 27.5,
+      "humidity": 55.0,
+      "apparentTemperature": 27.0,
       "level": "정상"
     },
     {
@@ -99,37 +78,37 @@
     },
     {
       "time": "1400",
+      "temperature": 27.0,
+      "humidity": 55.0,
+      "apparentTemperature": 27.0,
+      "level": "정상"
+    },
+    {
+      "time": "1500",
       "temperature": 28.0,
       "humidity": 55.0,
       "apparentTemperature": 28.0,
       "level": "정상"
     },
     {
-      "time": "1500",
-      "temperature": 28.0,
-      "humidity": 60.0,
-      "apparentTemperature": 28.4,
-      "level": "정상"
-    },
-    {
       "time": "1600",
       "temperature": 27.0,
-      "humidity": 60.0,
-      "apparentTemperature": 27.5,
+      "humidity": 55.0,
+      "apparentTemperature": 27.0,
       "level": "정상"
     },
     {
       "time": "1700",
-      "temperature": 25.0,
-      "humidity": 65.0,
-      "apparentTemperature": 25.9,
+      "temperature": 26.0,
+      "humidity": 60.0,
+      "apparentTemperature": 26.5,
       "level": "정상"
     },
     {
       "time": "1800",
       "temperature": 24.0,
-      "humidity": 70.0,
-      "apparentTemperature": 26.2,
+      "humidity": 65.0,
+      "apparentTemperature": 25.9,
       "level": "정상"
     },
     {
@@ -141,7 +120,7 @@
     },
     {
       "time": "2000",
-      "temperature": 23.0,
+      "temperature": 22.0,
       "humidity": 70.0,
       "apparentTemperature": 26.2,
       "level": "정상"
@@ -162,23 +141,23 @@
     },
     {
       "time": "2300",
-      "temperature": 22.0,
-      "humidity": 75.0,
-      "apparentTemperature": 26.6,
+      "temperature": 21.0,
+      "humidity": 80.0,
+      "apparentTemperature": 27.0,
       "level": "정상"
     }
   ],
-  "forecastMaxApparentTemperature": 28.4,
+  "forecastMaxApparentTemperature": 28.0,
   "forecastMaxTime": "1500",
   "forecastMaxLevel": "정상",
   "forecastMaxTemperature": 28.0,
-  "forecastMaxHumidity": 60.0,
+  "forecastMaxHumidity": 55.0,
   "forecastBaseDate": "20260907",
-  "forecastBaseTime": "0200",
+  "forecastBaseTime": "0500",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
-  "forecastSource": "CACHE",
+  "forecastFormula": "KOSHA_TABLE_INTERPOLATION",
   "levelChanged": false,
   "regularNotificationReason": "none",
   "regularTeamsNotified": false,
