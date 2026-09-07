@@ -1,8 +1,8 @@
 {
   "observedAt": "2026-09-08 07:37:00",
   "dataObservedAt": "2026-09-08 07:37:00",
-  "dataGeneratedAt": "2026-09-08 08:15:20",
-  "dataAgeMinutes": 38.3,
+  "dataGeneratedAt": "2026-09-08 08:30:27",
+  "dataAgeMinutes": 53.5,
   "isStaleData": true,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
@@ -17,30 +17,9 @@
   "previousLevel": "정상",
   "apiStatus": "STALE_DATA",
   "apiMessage": "실측 API 조회가 제한시간을 초과해 마지막 정상 관측값을 표시 중입니다.",
-  "forecastStatus": "HTTP_ERROR",
-  "forecastMessage": "HTTP_ERROR: <urlopen error timed out>",
+  "forecastStatus": "OK",
+  "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "0600",
-      "temperature": 20.0,
-      "humidity": 85.0,
-      "apparentTemperature": 27.3,
-      "level": "정상"
-    },
-    {
-      "time": "0700",
-      "temperature": 21.0,
-      "humidity": 85.0,
-      "apparentTemperature": 27.3,
-      "level": "정상"
-    },
-    {
-      "time": "0800",
-      "temperature": 23.0,
-      "humidity": 75.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
     {
       "time": "0900",
       "temperature": 24.0,
@@ -165,5 +144,6 @@
   "levelChangeTeamsNotified": false,
   "notificationReasons": [],
   "notificationReason": "none",
-  "teamsNotified": false
+  "teamsNotified": false,
+  "forecastFormula": "KOSHA_TABLE_INTERPOLATION"
 }
