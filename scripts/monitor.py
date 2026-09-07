@@ -10,7 +10,7 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-VERSION = "v1.7.0"
+VERSION = "v1.7.1"
 KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "sites.json"
@@ -836,6 +836,26 @@ def main():
     current.update({k: v for k, v in forecast.items() if k != "ok"})
     decisions = determine_notifications(last, current["level"], dt, current.get("observedAt"))
     regular_reason = decisions.get("regularReason")
+
+    # 오전 8시 정기보고는 당일 예상 최고 체감온도가 30.0℃ 이상인 날에만 발송한다.
+    # 예보값이 없거나 30.0℃ 미만이면 정기보고를 보내지 않는다.
+    # 경계 단계 관련 단계변경 알림은 기존 정책대로 별도 운영한다.
+    forecast_max = current.get("forecastMaxApparentTemperature")
+    try:
+        regular_forecast_due = float(forecast_max) >= 30.0
+    except (TypeError, ValueError):
+        regular_forecast_due = False
+
+    if regular_reason and not regular_forecast_due:
+        print(
+            f"[INFO] 08:00 regular report skipped: "
+            f"forecastMaxApparentTemperature={forecast_max!r} (< 30.0 or unavailable)",
+            flush=True,
+        )
+        regular_reason = None
+        decisions["regularReason"] = None
+        decisions["regularKey"] = None
+
     level_change_due = bool(decisions.get("levelChange"))
 
     regular_sent = send_teams(current, regular_reason) if regular_reason else False
