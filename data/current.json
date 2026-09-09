@@ -1,8 +1,8 @@
 {
   "observedAt": "2026-09-10 01:52:00",
   "dataObservedAt": "2026-09-10 01:52:00",
-  "dataGeneratedAt": "2026-09-10 02:15:24",
-  "dataAgeMinutes": 23.4,
+  "dataGeneratedAt": "2026-09-10 02:30:32",
+  "dataAgeMinutes": 38.5,
   "isStaleData": true,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
@@ -186,5 +186,6 @@
   "levelChangeTeamsNotified": false,
   "notificationReasons": [],
   "notificationReason": "none",
-  "teamsNotified": false
+  "teamsNotified": false,
+  "forecastSource": "CACHE"
 }
