@@ -1,49 +1,28 @@
 {
-  "observedAt": "2026-09-12 16:22:00",
-  "dataObservedAt": "2026-09-12 16:22:00",
-  "dataGeneratedAt": "2026-09-12 17:15:23",
-  "dataAgeMinutes": 53.4,
-  "isStaleData": true,
+  "observedAt": "2026-09-12 17:22:00",
+  "dataObservedAt": "2026-09-12 17:22:00",
+  "dataGeneratedAt": "2026-09-12 17:30:28",
+  "dataAgeMinutes": 8.5,
+  "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202609121622",
-  "apparentTemperature": 27.7,
-  "temperature": 27.1,
-  "humidity": 61.2,
-  "windSpeed": 2.5,
+  "awsObservedTime": "202609121722",
+  "apparentTemperature": 27.2,
+  "temperature": 26.3,
+  "humidity": 65.8,
+  "windSpeed": 2.4,
   "level": "정상",
   "previousLevel": "정상",
-  "apiStatus": "STALE_DATA",
-  "apiMessage": "실측 API 조회가 제한시간을 초과해 마지막 정상 관측값을 표시 중입니다.",
+  "apiStatus": "OK",
+  "apiMessage": "",
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
     {
-      "time": "1500",
-      "temperature": 27.0,
-      "humidity": 50.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
-    {
-      "time": "1600",
-      "temperature": 27.0,
-      "humidity": 55.0,
-      "apparentTemperature": 27.0,
-      "level": "정상"
-    },
-    {
-      "time": "1700",
-      "temperature": 26.0,
-      "humidity": 55.0,
-      "apparentTemperature": 26.0,
-      "level": "정상"
-    },
-    {
       "time": "1800",
-      "temperature": 24.0,
+      "temperature": 25.0,
       "humidity": 65.0,
       "apparentTemperature": 25.9,
       "level": "정상"
@@ -90,7 +69,7 @@
   "forecastMaxTemperature": 21.0,
   "forecastMaxHumidity": 85.0,
   "forecastBaseDate": "20260912",
-  "forecastBaseTime": "1400",
+  "forecastBaseTime": "1700",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
@@ -102,6 +81,5 @@
   "levelChangeTeamsNotified": false,
   "notificationReasons": [],
   "notificationReason": "holiday_or_weekend",
-  "teamsNotified": false,
-  "forecastSource": "CACHE"
+  "teamsNotified": false
 }
