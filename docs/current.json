@@ -1,8 +1,8 @@
 {
   "observedAt": "2026-09-14 22:38:00",
   "dataObservedAt": "2026-09-14 22:38:00",
-  "dataGeneratedAt": "2026-09-14 23:15:42",
-  "dataAgeMinutes": 37.7,
+  "dataGeneratedAt": "2026-09-14 23:30:30",
+  "dataAgeMinutes": 52.5,
   "isStaleData": true,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
@@ -17,8 +17,8 @@
   "previousLevel": "정상",
   "apiStatus": "STALE_DATA",
   "apiMessage": "실측 API 조회가 제한시간을 초과해 마지막 정상 관측값을 표시 중입니다.",
-  "forecastStatus": "NO_VALID_FORECAST",
-  "forecastMessage": "오늘 TMP/REH 예보값이 없습니다.",
+  "forecastStatus": "HTTP_ERROR",
+  "forecastMessage": "HTTP_ERROR: <urlopen error timed out>",
   "forecastItems": [
     {
       "time": "2100",
