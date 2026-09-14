@@ -1,46 +1,25 @@
 {
-  "observedAt": "2026-09-14 13:22:00",
-  "dataObservedAt": "2026-09-14 13:22:00",
-  "dataGeneratedAt": "2026-09-14 14:00:40",
-  "dataAgeMinutes": 38.7,
-  "isStaleData": true,
+  "observedAt": "2026-09-14 14:07:00",
+  "dataObservedAt": "2026-09-14 14:07:00",
+  "dataGeneratedAt": "2026-09-14 14:15:26",
+  "dataAgeMinutes": 8.4,
+  "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202609141322",
-  "apparentTemperature": 28.1,
+  "awsObservedTime": "202609141407",
+  "apparentTemperature": 27.4,
   "temperature": 29.2,
-  "humidity": 43.4,
+  "humidity": 37.0,
   "windSpeed": 2.7,
   "level": "정상",
   "previousLevel": "정상",
-  "apiStatus": "STALE_DATA",
-  "apiMessage": "실측 API 조회가 제한시간을 초과해 마지막 정상 관측값을 표시 중입니다.",
+  "apiStatus": "OK",
+  "apiMessage": "",
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "1200",
-      "temperature": 29.0,
-      "humidity": 40.0,
-      "apparentTemperature": 27.6,
-      "level": "정상"
-    },
-    {
-      "time": "1300",
-      "temperature": 29.0,
-      "humidity": 40.0,
-      "apparentTemperature": 27.6,
-      "level": "정상"
-    },
-    {
-      "time": "1400",
-      "temperature": 29.0,
-      "humidity": 40.0,
-      "apparentTemperature": 27.6,
-      "level": "정상"
-    },
     {
       "time": "1500",
       "temperature": 29.0,
@@ -111,11 +90,11 @@
   "forecastMaxTemperature": 29.0,
   "forecastMaxHumidity": 50.0,
   "forecastBaseDate": "20260914",
-  "forecastBaseTime": "1100",
+  "forecastBaseTime": "1400",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
-  "forecastSource": "CACHE",
+  "forecastFormula": "KOSHA_TABLE_INTERPOLATION",
   "levelChanged": false,
   "regularNotificationReason": "none",
   "regularTeamsNotified": false,
@@ -123,6 +102,5 @@
   "levelChangeTeamsNotified": false,
   "notificationReasons": [],
   "notificationReason": "none",
-  "teamsNotified": false,
-  "forecastFormula": "KOSHA_TABLE_INTERPOLATION"
+  "teamsNotified": false
 }
