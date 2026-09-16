@@ -1,49 +1,28 @@
 {
-  "observedAt": "2026-09-17 04:07:00",
-  "dataObservedAt": "2026-09-17 04:07:00",
-  "dataGeneratedAt": "2026-09-17 05:15:57",
-  "dataAgeMinutes": 69.0,
-  "isStaleData": true,
+  "observedAt": "2026-09-17 05:22:00",
+  "dataObservedAt": "2026-09-17 05:22:00",
+  "dataGeneratedAt": "2026-09-17 05:30:32",
+  "dataAgeMinutes": 8.5,
+  "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202609170407",
-  "apparentTemperature": 25.2,
+  "awsObservedTime": "202609170522",
+  "apparentTemperature": 25.6,
   "temperature": 24.1,
-  "humidity": 56.3,
-  "windSpeed": 1.6,
+  "humidity": 60.7,
+  "windSpeed": 2.0,
   "level": "정상",
   "previousLevel": "정상",
-  "apiStatus": "STALE_DATA",
-  "apiMessage": "실측 API 조회가 제한시간을 초과해 마지막 정상 관측값을 표시 중입니다.",
+  "apiStatus": "OK",
+  "apiMessage": "",
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
     {
-      "time": "0300",
-      "temperature": 21.0,
-      "humidity": 70.0,
-      "apparentTemperature": 26.2,
-      "level": "정상"
-    },
-    {
-      "time": "0400",
-      "temperature": 21.0,
-      "humidity": 70.0,
-      "apparentTemperature": 26.2,
-      "level": "정상"
-    },
-    {
-      "time": "0500",
-      "temperature": 21.0,
-      "humidity": 70.0,
-      "apparentTemperature": 26.2,
-      "level": "정상"
-    },
-    {
       "time": "0600",
-      "temperature": 21.0,
+      "temperature": 20.0,
       "humidity": 70.0,
       "apparentTemperature": 26.2,
       "level": "정상"
@@ -51,8 +30,8 @@
     {
       "time": "0700",
       "temperature": 21.0,
-      "humidity": 65.0,
-      "apparentTemperature": 25.9,
+      "humidity": 70.0,
+      "apparentTemperature": 26.2,
       "level": "정상"
     },
     {
@@ -78,44 +57,44 @@
     },
     {
       "time": "1100",
+      "temperature": 25.0,
+      "humidity": 60.0,
+      "apparentTemperature": 25.5,
+      "level": "정상"
+    },
+    {
+      "time": "1200",
       "temperature": 26.0,
       "humidity": 55.0,
       "apparentTemperature": 26.0,
       "level": "정상"
     },
     {
-      "time": "1200",
-      "temperature": 27.0,
-      "humidity": 55.0,
-      "apparentTemperature": 27.0,
-      "level": "정상"
-    },
-    {
       "time": "1300",
-      "temperature": 27.0,
+      "temperature": 26.0,
       "humidity": 55.0,
-      "apparentTemperature": 27.0,
+      "apparentTemperature": 26.0,
       "level": "정상"
     },
     {
       "time": "1400",
-      "temperature": 27.0,
+      "temperature": 26.0,
       "humidity": 55.0,
-      "apparentTemperature": 27.0,
+      "apparentTemperature": 26.0,
       "level": "정상"
     },
     {
       "time": "1500",
-      "temperature": 27.0,
+      "temperature": 26.0,
       "humidity": 55.0,
-      "apparentTemperature": 27.0,
+      "apparentTemperature": 26.0,
       "level": "정상"
     },
     {
       "time": "1600",
-      "temperature": 27.0,
+      "temperature": 25.0,
       "humidity": 55.0,
-      "apparentTemperature": 27.0,
+      "apparentTemperature": 25.1,
       "level": "정상"
     },
     {
@@ -156,25 +135,25 @@
     {
       "time": "2200",
       "temperature": 23.0,
-      "humidity": 60.0,
-      "apparentTemperature": 25.5,
+      "humidity": 65.0,
+      "apparentTemperature": 25.9,
       "level": "정상"
     },
     {
       "time": "2300",
       "temperature": 23.0,
-      "humidity": 60.0,
-      "apparentTemperature": 25.5,
+      "humidity": 65.0,
+      "apparentTemperature": 25.9,
       "level": "정상"
     }
   ],
-  "forecastMaxApparentTemperature": 27.0,
-  "forecastMaxTime": "1200",
+  "forecastMaxApparentTemperature": 26.2,
+  "forecastMaxTime": "0600",
   "forecastMaxLevel": "정상",
-  "forecastMaxTemperature": 27.0,
-  "forecastMaxHumidity": 55.0,
+  "forecastMaxTemperature": 20.0,
+  "forecastMaxHumidity": 70.0,
   "forecastBaseDate": "20260917",
-  "forecastBaseTime": "0200",
+  "forecastBaseTime": "0500",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
@@ -186,6 +165,5 @@
   "levelChangeTeamsNotified": false,
   "notificationReasons": [],
   "notificationReason": "none",
-  "teamsNotified": false,
-  "forecastSource": "CACHE"
+  "teamsNotified": false
 }
