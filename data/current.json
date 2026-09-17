@@ -1,46 +1,25 @@
 {
-  "observedAt": "2026-09-17 10:52:00",
-  "dataObservedAt": "2026-09-17 10:52:00",
-  "dataGeneratedAt": "2026-09-17 11:45:21",
-  "dataAgeMinutes": 53.4,
-  "isStaleData": true,
+  "observedAt": "2026-09-17 11:52:00",
+  "dataObservedAt": "2026-09-17 11:52:00",
+  "dataGeneratedAt": "2026-09-17 12:00:41",
+  "dataAgeMinutes": 8.7,
+  "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202609171052",
-  "apparentTemperature": 26.0,
-  "temperature": 26.0,
-  "humidity": 55.0,
-  "windSpeed": 3.2,
+  "awsObservedTime": "202609171152",
+  "apparentTemperature": 25.7,
+  "temperature": 25.9,
+  "humidity": 52.8,
+  "windSpeed": 2.8,
   "level": "정상",
   "previousLevel": "정상",
-  "apiStatus": "STALE_DATA",
-  "apiMessage": "실측 API 조회가 제한시간을 초과해 마지막 정상 관측값을 표시 중입니다.",
+  "apiStatus": "OK",
+  "apiMessage": "",
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "0900",
-      "temperature": 24.0,
-      "humidity": 60.0,
-      "apparentTemperature": 25.5,
-      "level": "정상"
-    },
-    {
-      "time": "1000",
-      "temperature": 25.0,
-      "humidity": 60.0,
-      "apparentTemperature": 25.5,
-      "level": "정상"
-    },
-    {
-      "time": "1100",
-      "temperature": 25.0,
-      "humidity": 60.0,
-      "apparentTemperature": 25.5,
-      "level": "정상"
-    },
     {
       "time": "1200",
       "temperature": 26.0,
@@ -132,7 +111,7 @@
   "forecastMaxTemperature": 26.0,
   "forecastMaxHumidity": 55.0,
   "forecastBaseDate": "20260917",
-  "forecastBaseTime": "0800",
+  "forecastBaseTime": "1100",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
@@ -144,6 +123,5 @@
   "levelChangeTeamsNotified": false,
   "notificationReasons": [],
   "notificationReason": "none",
-  "teamsNotified": false,
-  "forecastSource": "CACHE"
+  "teamsNotified": false
 }
