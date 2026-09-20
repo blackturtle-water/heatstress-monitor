@@ -1,205 +1,28 @@
 {
-  "observedAt": "2026-09-21 00:07:00",
-  "dataObservedAt": "2026-09-21 00:07:00",
-  "dataGeneratedAt": "2026-09-21 00:30:29",
-  "dataAgeMinutes": 23.5,
-  "isStaleData": true,
+  "observedAt": "2026-09-21 00:35:00",
+  "dataObservedAt": "2026-09-21 00:35:00",
+  "dataGeneratedAt": "2026-09-21 00:45:34",
+  "dataAgeMinutes": 10.6,
+  "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
-  "awsStation": "898",
-  "awsStationName": "장생포",
-  "awsObservedTime": "202609210007",
+  "awsStation": "954",
+  "awsStationName": "온산",
+  "awsObservedTime": "202609210035",
   "apparentTemperature": 26.6,
-  "temperature": 21.0,
-  "humidity": 75.6,
-  "windSpeed": 2.6,
+  "temperature": 21.2,
+  "humidity": 75.3,
+  "windSpeed": 4.0,
   "level": "정상",
   "previousLevel": "정상",
-  "apiStatus": "STALE_DATA",
-  "apiMessage": "실측 API 조회가 제한시간을 초과해 마지막 정상 관측값을 표시 중입니다.",
+  "apiStatus": "OK",
+  "apiMessage": "",
   "forecastStatus": "HTTP_ERROR",
-  "forecastMessage": "HTTP_ERROR: <urlopen error timed out>",
-  "forecastItems": [
-    {
-      "time": "0000",
-      "temperature": 20.0,
-      "humidity": 80.0,
-      "apparentTemperature": 27.0,
-      "level": "정상"
-    },
-    {
-      "time": "0100",
-      "temperature": 20.0,
-      "humidity": 80.0,
-      "apparentTemperature": 27.0,
-      "level": "정상"
-    },
-    {
-      "time": "0200",
-      "temperature": 20.0,
-      "humidity": 80.0,
-      "apparentTemperature": 27.0,
-      "level": "정상"
-    },
-    {
-      "time": "0300",
-      "temperature": 19.0,
-      "humidity": 85.0,
-      "apparentTemperature": 27.3,
-      "level": "정상"
-    },
-    {
-      "time": "0400",
-      "temperature": 19.0,
-      "humidity": 85.0,
-      "apparentTemperature": 27.3,
-      "level": "정상"
-    },
-    {
-      "time": "0500",
-      "temperature": 19.0,
-      "humidity": 85.0,
-      "apparentTemperature": 27.3,
-      "level": "정상"
-    },
-    {
-      "time": "0600",
-      "temperature": 19.0,
-      "humidity": 85.0,
-      "apparentTemperature": 27.3,
-      "level": "정상"
-    },
-    {
-      "time": "0700",
-      "temperature": 19.0,
-      "humidity": 85.0,
-      "apparentTemperature": 27.3,
-      "level": "정상"
-    },
-    {
-      "time": "0800",
-      "temperature": 21.0,
-      "humidity": 75.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
-    {
-      "time": "0900",
-      "temperature": 23.0,
-      "humidity": 70.0,
-      "apparentTemperature": 26.2,
-      "level": "정상"
-    },
-    {
-      "time": "1000",
-      "temperature": 25.0,
-      "humidity": 65.0,
-      "apparentTemperature": 25.9,
-      "level": "정상"
-    },
-    {
-      "time": "1100",
-      "temperature": 26.0,
-      "humidity": 60.0,
-      "apparentTemperature": 26.5,
-      "level": "정상"
-    },
-    {
-      "time": "1200",
-      "temperature": 27.0,
-      "humidity": 55.0,
-      "apparentTemperature": 27.0,
-      "level": "정상"
-    },
-    {
-      "time": "1300",
-      "temperature": 27.0,
-      "humidity": 50.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
-    {
-      "time": "1400",
-      "temperature": 27.0,
-      "humidity": 50.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
-    {
-      "time": "1500",
-      "temperature": 27.0,
-      "humidity": 50.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
-    {
-      "time": "1600",
-      "temperature": 27.0,
-      "humidity": 55.0,
-      "apparentTemperature": 27.0,
-      "level": "정상"
-    },
-    {
-      "time": "1700",
-      "temperature": 25.0,
-      "humidity": 60.0,
-      "apparentTemperature": 25.5,
-      "level": "정상"
-    },
-    {
-      "time": "1800",
-      "temperature": 24.0,
-      "humidity": 65.0,
-      "apparentTemperature": 25.9,
-      "level": "정상"
-    },
-    {
-      "time": "1900",
-      "temperature": 22.0,
-      "humidity": 70.0,
-      "apparentTemperature": 26.2,
-      "level": "정상"
-    },
-    {
-      "time": "2000",
-      "temperature": 22.0,
-      "humidity": 75.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
-    {
-      "time": "2100",
-      "temperature": 21.0,
-      "humidity": 75.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
-    {
-      "time": "2200",
-      "temperature": 21.0,
-      "humidity": 75.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    },
-    {
-      "time": "2300",
-      "temperature": 21.0,
-      "humidity": 75.0,
-      "apparentTemperature": 26.6,
-      "level": "정상"
-    }
-  ],
-  "forecastMaxApparentTemperature": 27.3,
-  "forecastMaxTime": "0300",
-  "forecastMaxLevel": "정상",
-  "forecastMaxTemperature": 19.0,
-  "forecastMaxHumidity": 85.0,
+  "forecastMessage": "HTTP_ERROR: <urlopen error [Errno 104] Connection reset by peer>",
   "forecastBaseDate": "20260920",
   "forecastBaseTime": "2300",
   "forecastNx": "102",
   "forecastNy": "83",
-  "forecastGridName": "울산 남구",
-  "forecastSource": "CACHE",
   "levelChanged": false,
   "regularNotificationReason": "none",
   "regularTeamsNotified": false,
