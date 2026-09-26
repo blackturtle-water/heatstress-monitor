@@ -1,28 +1,163 @@
 {
-  "observedAt": "2026-09-27 06:23:00",
-  "dataObservedAt": "2026-09-27 06:23:00",
-  "dataGeneratedAt": "2026-09-27 06:31:03",
-  "dataAgeMinutes": 8.1,
+  "observedAt": "2026-09-27 06:37:00",
+  "dataObservedAt": "2026-09-27 06:37:00",
+  "dataGeneratedAt": "2026-09-27 06:45:21",
+  "dataAgeMinutes": 8.4,
   "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
-  "awsStation": "949",
-  "awsStationName": "정자",
-  "awsObservedTime": "202609270623",
-  "apparentTemperature": 27.2,
-  "temperature": 19.8,
-  "humidity": 83.5,
-  "windSpeed": 1.4,
+  "awsStation": "898",
+  "awsStationName": "장생포",
+  "awsObservedTime": "202609270637",
+  "apparentTemperature": 27.9,
+  "temperature": 19.6,
+  "humidity": 92.7,
+  "windSpeed": 2.0,
   "level": "정상",
   "previousLevel": "정상",
   "apiStatus": "OK",
   "apiMessage": "",
-  "forecastStatus": "HTTP_ERROR",
-  "forecastMessage": "HTTP_ERROR: <urlopen error [Errno 104] Connection reset by peer>",
+  "forecastStatus": "OK",
+  "forecastMessage": "",
+  "forecastItems": [
+    {
+      "time": "0600",
+      "temperature": 19.0,
+      "humidity": 90.0,
+      "apparentTemperature": 27.7,
+      "level": "정상"
+    },
+    {
+      "time": "0700",
+      "temperature": 19.0,
+      "humidity": 90.0,
+      "apparentTemperature": 27.7,
+      "level": "정상"
+    },
+    {
+      "time": "0800",
+      "temperature": 21.0,
+      "humidity": 80.0,
+      "apparentTemperature": 27.0,
+      "level": "정상"
+    },
+    {
+      "time": "0900",
+      "temperature": 23.0,
+      "humidity": 75.0,
+      "apparentTemperature": 26.6,
+      "level": "정상"
+    },
+    {
+      "time": "1000",
+      "temperature": 24.0,
+      "humidity": 75.0,
+      "apparentTemperature": 26.6,
+      "level": "정상"
+    },
+    {
+      "time": "1100",
+      "temperature": 25.0,
+      "humidity": 70.0,
+      "apparentTemperature": 26.2,
+      "level": "정상"
+    },
+    {
+      "time": "1200",
+      "temperature": 26.0,
+      "humidity": 70.0,
+      "apparentTemperature": 27.2,
+      "level": "정상"
+    },
+    {
+      "time": "1300",
+      "temperature": 26.0,
+      "humidity": 70.0,
+      "apparentTemperature": 27.2,
+      "level": "정상"
+    },
+    {
+      "time": "1400",
+      "temperature": 26.0,
+      "humidity": 70.0,
+      "apparentTemperature": 27.2,
+      "level": "정상"
+    },
+    {
+      "time": "1500",
+      "temperature": 26.0,
+      "humidity": 70.0,
+      "apparentTemperature": 27.2,
+      "level": "정상"
+    },
+    {
+      "time": "1600",
+      "temperature": 25.0,
+      "humidity": 70.0,
+      "apparentTemperature": 26.2,
+      "level": "정상"
+    },
+    {
+      "time": "1700",
+      "temperature": 25.0,
+      "humidity": 75.0,
+      "apparentTemperature": 26.6,
+      "level": "정상"
+    },
+    {
+      "time": "1800",
+      "temperature": 23.0,
+      "humidity": 80.0,
+      "apparentTemperature": 27.0,
+      "level": "정상"
+    },
+    {
+      "time": "1900",
+      "temperature": 22.0,
+      "humidity": 85.0,
+      "apparentTemperature": 27.3,
+      "level": "정상"
+    },
+    {
+      "time": "2000",
+      "temperature": 22.0,
+      "humidity": 90.0,
+      "apparentTemperature": 27.7,
+      "level": "정상"
+    },
+    {
+      "time": "2100",
+      "temperature": 21.0,
+      "humidity": 90.0,
+      "apparentTemperature": 27.7,
+      "level": "정상"
+    },
+    {
+      "time": "2200",
+      "temperature": 21.0,
+      "humidity": 95.0,
+      "apparentTemperature": 28.0,
+      "level": "정상"
+    },
+    {
+      "time": "2300",
+      "temperature": 21.0,
+      "humidity": 95.0,
+      "apparentTemperature": 28.0,
+      "level": "정상"
+    }
+  ],
+  "forecastMaxApparentTemperature": 28.0,
+  "forecastMaxTime": "2200",
+  "forecastMaxLevel": "정상",
+  "forecastMaxTemperature": 21.0,
+  "forecastMaxHumidity": 95.0,
   "forecastBaseDate": "20260927",
   "forecastBaseTime": "0500",
   "forecastNx": "102",
   "forecastNy": "83",
+  "forecastGridName": "울산 남구",
+  "forecastFormula": "KOSHA_TABLE_INTERPOLATION",
   "levelChanged": false,
   "regularNotificationReason": "none",
   "regularTeamsNotified": false,
