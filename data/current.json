@@ -1,142 +1,28 @@
 {
-  "observedAt": "2026-10-02 10:23:00",
-  "dataObservedAt": "2026-10-02 10:23:00",
-  "dataGeneratedAt": "2026-10-02 10:31:04",
-  "dataAgeMinutes": 8.1,
+  "observedAt": "2026-10-02 10:37:00",
+  "dataObservedAt": "2026-10-02 10:37:00",
+  "dataGeneratedAt": "2026-10-02 10:45:23",
+  "dataAgeMinutes": 8.4,
   "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
-  "awsStation": "898",
-  "awsStationName": "장생포",
-  "awsObservedTime": "202610021023",
+  "awsStation": "949",
+  "awsStationName": "정자",
+  "awsObservedTime": "202610021037",
   "apparentTemperature": 23.8,
-  "temperature": 21.9,
-  "humidity": 39.9,
-  "windSpeed": 2.7,
+  "temperature": 22.1,
+  "humidity": 39.6,
+  "windSpeed": 3.4,
   "level": "정상",
   "previousLevel": "정상",
   "apiStatus": "OK",
   "apiMessage": "",
-  "forecastStatus": "OK",
-  "forecastMessage": "",
-  "forecastItems": [
-    {
-      "time": "0900",
-      "temperature": 19.0,
-      "humidity": 45.0,
-      "apparentTemperature": 24.2,
-      "level": "정상"
-    },
-    {
-      "time": "1000",
-      "temperature": 21.0,
-      "humidity": 45.0,
-      "apparentTemperature": 24.2,
-      "level": "정상"
-    },
-    {
-      "time": "1100",
-      "temperature": 22.0,
-      "humidity": 45.0,
-      "apparentTemperature": 24.2,
-      "level": "정상"
-    },
-    {
-      "time": "1200",
-      "temperature": 23.0,
-      "humidity": 40.0,
-      "apparentTemperature": 23.8,
-      "level": "정상"
-    },
-    {
-      "time": "1300",
-      "temperature": 23.0,
-      "humidity": 40.0,
-      "apparentTemperature": 23.8,
-      "level": "정상"
-    },
-    {
-      "time": "1400",
-      "temperature": 23.0,
-      "humidity": 40.0,
-      "apparentTemperature": 23.8,
-      "level": "정상"
-    },
-    {
-      "time": "1500",
-      "temperature": 23.0,
-      "humidity": 40.0,
-      "apparentTemperature": 23.8,
-      "level": "정상"
-    },
-    {
-      "time": "1600",
-      "temperature": 23.0,
-      "humidity": 45.0,
-      "apparentTemperature": 24.2,
-      "level": "정상"
-    },
-    {
-      "time": "1700",
-      "temperature": 21.0,
-      "humidity": 45.0,
-      "apparentTemperature": 24.2,
-      "level": "정상"
-    },
-    {
-      "time": "1800",
-      "temperature": 19.0,
-      "humidity": 55.0,
-      "apparentTemperature": 25.1,
-      "level": "정상"
-    },
-    {
-      "time": "1900",
-      "temperature": 18.0,
-      "humidity": 60.0,
-      "apparentTemperature": 25.5,
-      "level": "정상"
-    },
-    {
-      "time": "2000",
-      "temperature": 18.0,
-      "humidity": 60.0,
-      "apparentTemperature": 25.5,
-      "level": "정상"
-    },
-    {
-      "time": "2100",
-      "temperature": 17.0,
-      "humidity": 65.0,
-      "apparentTemperature": 25.9,
-      "level": "정상"
-    },
-    {
-      "time": "2200",
-      "temperature": 16.0,
-      "humidity": 70.0,
-      "apparentTemperature": 26.2,
-      "level": "정상"
-    },
-    {
-      "time": "2300",
-      "temperature": 15.0,
-      "humidity": 70.0,
-      "apparentTemperature": 26.2,
-      "level": "정상"
-    }
-  ],
-  "forecastMaxApparentTemperature": 26.2,
-  "forecastMaxTime": "2200",
-  "forecastMaxLevel": "정상",
-  "forecastMaxTemperature": 16.0,
-  "forecastMaxHumidity": 70.0,
+  "forecastStatus": "HTTP_ERROR",
+  "forecastMessage": "HTTP_ERROR: <urlopen error [Errno 104] Connection reset by peer>",
   "forecastBaseDate": "20261002",
   "forecastBaseTime": "0800",
   "forecastNx": "102",
   "forecastNy": "83",
-  "forecastGridName": "울산 남구",
-  "forecastSource": "CACHE",
   "levelChanged": false,
   "regularNotificationReason": "none",
   "regularTeamsNotified": false,
