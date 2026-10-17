@@ -1,8 +1,8 @@
 {
   "observedAt": "2026-10-17 10:37:00",
   "dataObservedAt": "2026-10-17 10:37:00",
-  "dataGeneratedAt": "2026-10-17 11:00:36",
-  "dataAgeMinutes": 23.6,
+  "dataGeneratedAt": "2026-10-17 11:15:21",
+  "dataAgeMinutes": 38.4,
   "isStaleData": true,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
@@ -20,27 +20,6 @@
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "0900",
-      "temperature": 21.0,
-      "humidity": 65.0,
-      "apparentTemperature": 25.9,
-      "level": "정상"
-    },
-    {
-      "time": "1000",
-      "temperature": 23.0,
-      "humidity": 50.0,
-      "apparentTemperature": 24.6,
-      "level": "정상"
-    },
-    {
-      "time": "1100",
-      "temperature": 24.0,
-      "humidity": 50.0,
-      "apparentTemperature": 24.6,
-      "level": "정상"
-    },
     {
       "time": "1200",
       "temperature": 24.0,
@@ -127,12 +106,12 @@
     }
   ],
   "forecastMaxApparentTemperature": 25.9,
-  "forecastMaxTime": "0900",
+  "forecastMaxTime": "2000",
   "forecastMaxLevel": "정상",
   "forecastMaxTemperature": 21.0,
   "forecastMaxHumidity": 65.0,
   "forecastBaseDate": "20261017",
-  "forecastBaseTime": "0800",
+  "forecastBaseTime": "1100",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
