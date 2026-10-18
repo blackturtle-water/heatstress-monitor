@@ -1,14 +1,14 @@
 {
   "level": "정상",
   "apparentTemperature": 28.2,
-  "observedAt": "2026-10-19 03:22:00",
-  "dataGeneratedAt": "2026-10-19 03:30:29",
+  "observedAt": "2026-10-19 03:37:00",
+  "dataGeneratedAt": "2026-10-19 03:45:23",
   "temperature": 21.8,
   "humidity": 97.4,
-  "windSpeed": 4.8,
+  "windSpeed": 4.6,
   "awsStation": "954",
   "awsStationName": "온산",
-  "awsObservedTime": "202610190322",
+  "awsObservedTime": "202610190337",
   "regularReports": {
     "2026-08-13_08": "2026-08-13 08:56:24",
     "2026-08-13_13": "2026-08-13 13:03:59",
