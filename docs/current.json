@@ -1,17 +1,17 @@
 {
-  "observedAt": "2026-11-11 16:52:00",
-  "dataObservedAt": "2026-11-11 16:52:00",
-  "dataGeneratedAt": "2026-11-11 17:00:41",
-  "dataAgeMinutes": 8.7,
+  "observedAt": "2026-11-11 17:07:00",
+  "dataObservedAt": "2026-11-11 17:07:00",
+  "dataGeneratedAt": "2026-11-11 17:15:26",
+  "dataAgeMinutes": 8.4,
   "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202611111652",
-  "apparentTemperature": 24.8,
-  "temperature": 15.7,
-  "humidity": 51.7,
+  "awsObservedTime": "202611111707",
+  "apparentTemperature": 24.9,
+  "temperature": 15.4,
+  "humidity": 52.9,
   "windSpeed": 1.1,
   "level": "정상",
   "previousLevel": "정상",
@@ -20,27 +20,6 @@
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "1500",
-      "temperature": 18.0,
-      "humidity": 40.0,
-      "apparentTemperature": 23.8,
-      "level": "정상"
-    },
-    {
-      "time": "1600",
-      "temperature": 17.0,
-      "humidity": 45.0,
-      "apparentTemperature": 24.2,
-      "level": "정상"
-    },
-    {
-      "time": "1700",
-      "temperature": 15.0,
-      "humidity": 60.0,
-      "apparentTemperature": 25.5,
-      "level": "정상"
-    },
     {
       "time": "1800",
       "temperature": 13.0,
@@ -51,8 +30,8 @@
     {
       "time": "1900",
       "temperature": 11.0,
-      "humidity": 70.0,
-      "apparentTemperature": 26.2,
+      "humidity": 75.0,
+      "apparentTemperature": 26.6,
       "level": "정상"
     },
     {
@@ -71,14 +50,14 @@
     },
     {
       "time": "2200",
-      "temperature": 7.0,
+      "temperature": 8.0,
       "humidity": 80.0,
       "apparentTemperature": 27.0,
       "level": "정상"
     },
     {
       "time": "2300",
-      "temperature": 6.0,
+      "temperature": 7.0,
       "humidity": 80.0,
       "apparentTemperature": 27.0,
       "level": "정상"
@@ -90,11 +69,11 @@
   "forecastMaxTemperature": 8.0,
   "forecastMaxHumidity": 80.0,
   "forecastBaseDate": "20261111",
-  "forecastBaseTime": "1400",
+  "forecastBaseTime": "1700",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
-  "forecastSource": "CACHE",
+  "forecastFormula": "KOSHA_TABLE_INTERPOLATION",
   "levelChanged": false,
   "regularNotificationReason": "none",
   "regularTeamsNotified": false,
