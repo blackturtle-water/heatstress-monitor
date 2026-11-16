@@ -1,29 +1,18 @@
 {
-<<<<<<< Updated upstream
-  "observedAt": "2026-11-17 00:52:00",
-  "dataObservedAt": "2026-11-17 00:52:00",
-  "dataGeneratedAt": "2026-11-17 01:00:46",
-  "dataAgeMinutes": 8.8,
-=======
-  "observedAt": "2026-11-17 01:01:00",
-  "dataObservedAt": "2026-11-17 01:01:00",
-  "dataGeneratedAt": "2026-11-17 01:09:37",
-  "dataAgeMinutes": 8.6,
->>>>>>> Stashed changes
+  "observedAt": "2026-11-17 01:07:00",
+  "dataObservedAt": "2026-11-17 01:07:00",
+  "dataGeneratedAt": "2026-11-17 01:15:29",
+  "dataAgeMinutes": 8.5,
   "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-<<<<<<< Updated upstream
-  "awsObservedTime": "202611170052",
-=======
-  "awsObservedTime": "202611170101",
->>>>>>> Stashed changes
+  "awsObservedTime": "202611170107",
   "apparentTemperature": 26.2,
   "temperature": 16.5,
-  "humidity": 69.8,
-  "windSpeed": 2.6,
+  "humidity": 69.3,
+  "windSpeed": 3.0,
   "level": "정상",
   "previousLevel": "정상",
   "apiStatus": "OK",
@@ -210,7 +199,7 @@
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
-  "forecastSource": "CACHE",
+  "forecastFormula": "KOSHA_TABLE_INTERPOLATION",
   "levelChanged": false,
   "regularNotificationReason": "none",
   "regularTeamsNotified": false,
