@@ -1,13 +1,13 @@
 {
   "level": "정상",
-  "apparentTemperature": 23.4,
-  "observedAt": "2026-11-20 19:07:00",
-  "dataGeneratedAt": "2026-11-20 19:15:30",
-  "temperature": 5.0,
-  "humidity": 36.5,
-  "windSpeed": 2.9,
-  "awsStation": "898",
-  "awsStationName": "장생포",
-  "awsObservedTime": "202611201907",
+  "apparentTemperature": 23.9,
+  "observedAt": "2026-11-20 19:22:00",
+  "dataGeneratedAt": "2026-11-20 19:30:36",
+  "temperature": 4.1,
+  "humidity": 41.8,
+  "windSpeed": 3.4,
+  "awsStation": "954",
+  "awsStationName": "온산",
+  "awsObservedTime": "202611201922",
   "regularReports": {}
 }
