@@ -1,46 +1,25 @@
 {
-  "observedAt": "2026-11-24 01:37:00",
-  "dataObservedAt": "2026-11-24 01:37:00",
-  "dataGeneratedAt": "2026-11-24 02:00:50",
-  "dataAgeMinutes": 23.8,
-  "isStaleData": true,
+  "observedAt": "2026-11-24 02:07:00",
+  "dataObservedAt": "2026-11-24 02:07:00",
+  "dataGeneratedAt": "2026-11-24 02:15:29",
+  "dataAgeMinutes": 8.5,
+  "isStaleData": false,
   "siteName": "유니드 울산공장",
   "address": "울산광역시 남구 상개로 142",
   "awsStation": "898",
   "awsStationName": "장생포",
-  "awsObservedTime": "202611240137",
-  "apparentTemperature": 28.0,
-  "temperature": 14.7,
-  "humidity": 94.5,
-  "windSpeed": 1.6,
+  "awsObservedTime": "202611240207",
+  "apparentTemperature": 26.7,
+  "temperature": 15.4,
+  "humidity": 76.0,
+  "windSpeed": 2.5,
   "level": "정상",
   "previousLevel": "정상",
-  "apiStatus": "STALE_DATA",
-  "apiMessage": "실측 API 조회가 제한시간을 초과해 마지막 정상 관측값을 표시 중입니다.",
+  "apiStatus": "OK",
+  "apiMessage": "",
   "forecastStatus": "OK",
   "forecastMessage": "",
   "forecastItems": [
-    {
-      "time": "0000",
-      "temperature": 13.0,
-      "humidity": 85.0,
-      "apparentTemperature": 27.3,
-      "level": "정상"
-    },
-    {
-      "time": "0100",
-      "temperature": 13.0,
-      "humidity": 90.0,
-      "apparentTemperature": 27.7,
-      "level": "정상"
-    },
-    {
-      "time": "0200",
-      "temperature": 12.0,
-      "humidity": 85.0,
-      "apparentTemperature": 27.3,
-      "level": "정상"
-    },
     {
       "time": "0300",
       "temperature": 11.0,
@@ -189,13 +168,13 @@
       "level": "정상"
     }
   ],
-  "forecastMaxApparentTemperature": 27.7,
-  "forecastMaxTime": "0100",
+  "forecastMaxApparentTemperature": 27.3,
+  "forecastMaxTime": "0300",
   "forecastMaxLevel": "정상",
-  "forecastMaxTemperature": 13.0,
-  "forecastMaxHumidity": 90.0,
-  "forecastBaseDate": "20261123",
-  "forecastBaseTime": "2300",
+  "forecastMaxTemperature": 11.0,
+  "forecastMaxHumidity": 85.0,
+  "forecastBaseDate": "20261124",
+  "forecastBaseTime": "0200",
   "forecastNx": "102",
   "forecastNy": "83",
   "forecastGridName": "울산 남구",
@@ -207,6 +186,5 @@
   "levelChangeTeamsNotified": false,
   "notificationReasons": [],
   "notificationReason": "none",
-  "teamsNotified": false,
-  "forecastSource": "CACHE"
+  "teamsNotified": false
 }
